@@ -25,13 +25,15 @@ WHERE
     jobname LIKE 'medisync-%';
 
 -- Job 1: Process due reminders — fires every minute
+-- Note: pg_net ≥ 0.8 requires body as text, not jsonb
 SELECT cron.schedule(
     'medisync-notify-reminders',
     '* * * * *',
     $$SELECT net.http_post(
-        url     := '{{APP_URL}}/api/cron/notify-reminders',
-        headers := '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
-        body    := '{}'::jsonb
+        url                  => '{{APP_URL}}/api/cron/notify-reminders',
+        headers              => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
+        body                 => '{}'::jsonb,
+        timeout_milliseconds => 60000
     )$$
 );
 
@@ -40,8 +42,9 @@ SELECT cron.schedule(
     'medisync-notify-appointments',
     '* * * * *',
     $$SELECT net.http_post(
-        url     := '{{APP_URL}}/api/cron/notify-appointments',
-        headers := '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
-        body    := '{}'::jsonb
+        url                  => '{{APP_URL}}/api/cron/notify-appointments',
+        headers              => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
+        body                 => '{}'::jsonb,
+        timeout_milliseconds => 60000
     )$$
 );
