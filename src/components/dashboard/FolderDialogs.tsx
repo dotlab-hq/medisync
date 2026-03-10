@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFolder, updateFolder } from "@/server/documents";
 import { Button } from "@/components/ui/button";
@@ -99,6 +99,11 @@ export function EditFolderDialog({
     const [name, setName] = useState(editFolder?.name ?? "");
     const [labels, setLabels] = useState<string[]>(editFolder?.labels ?? []);
 
+    useEffect(() => {
+        setName(editFolder?.name ?? "");
+        setLabels(editFolder?.labels ?? []);
+    }, [editFolder]);
+
     const mutation = useMutation({
         mutationFn: updateFolder,
         onSuccess: () => {
@@ -107,7 +112,6 @@ export function EditFolderDialog({
         },
     });
 
-    // Sync state when editFolder changes
     const folderId = editFolder?.id ?? null;
 
     return (
