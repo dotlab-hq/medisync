@@ -1,0 +1,1 @@
+import{j as e,O as t}from"./main-C3psr5Dv.js";function m(){return e.jsx("div",{className:"flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12",children:e.jsx("div",{className:"w-full max-w-md",children:e.jsx(t,{})})})}export{m as component};

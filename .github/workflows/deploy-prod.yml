@@ -1,0 +1,84 @@
+name: Deploy to Vercel (Production)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy:
+    environment: production
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Update env-manager with production variables
+        run: |
+          # Create .env file with all production variables
+          cat > .env << 'EOF'
+          APP_URL=${{ secrets.APP_URL }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          AWS_S3_ENDPOINT=${{ secrets.AWS_S3_ENDPOINT }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
+          BETTER_AUTH_URL=${{ secrets.BETTER_AUTH_URL }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+          MEDISYNC_PRIVATE_KEY=${{ secrets.MEDISYNC_PRIVATE_KEY }}
+          RELAYX_API_KEY=${{ secrets.RELAYX_API_KEY }}
+          RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+          EOF
+
+          # Import using CLI with correct syntax
+          npx @dotlab-hq/env-cli import file medisync .env --from ./.env --merge --yes \
+            --username wpsadi \
+            --api-key ${{ secrets.ENV_MANAGER_KEY }} \
+            --project medisync
+
+      - name: Set environment variables on Vercel
+        run: |
+          echo -n "${{ secrets.DATABASE_URL }}" | vercel env add DATABASE_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.BETTER_AUTH_URL }}" | vercel env add BETTER_AUTH_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.BETTER_AUTH_SECRET }}" | vercel env add BETTER_AUTH_SECRET production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.RESEND_API_KEY }}" | vercel env add RESEND_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.EMAIL_FROM }}" | vercel env add EMAIL_FROM production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.APP_URL }}" | vercel env add APP_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project with pnpm
+        run: pnpm build
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

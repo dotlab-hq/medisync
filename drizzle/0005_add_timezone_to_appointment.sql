@@ -1,0 +1,1 @@
+ALTER TABLE "medisync"."appointment" ADD COLUMN "timezone" text DEFAULT 'UTC' NOT NULL;
