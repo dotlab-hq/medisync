@@ -5,6 +5,7 @@ import { reminder, user } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getRequest } from "@tanstack/react-start/server";
+import { toUtcDate } from "@/lib/to-utc";
 
 // ── List reminders ───────────────────────────────────────────────────
 export const listReminders = createServerFn( { method: "GET" } ).handler(
@@ -50,10 +51,13 @@ export const createReminder = createServerFn( { method: "POST" } )
             timezone = userRecord?.timezone ?? "UTC";
         }
 
+        // Pre-compute UTC send time from local date + time + timezone
+        const toBeSentAt = toUtcDate( data.date, data.time, timezone );
+
         const { timezone: _tz, ...rest } = data;
         const [created] = await db
             .insert( reminder )
-            .values( { ...rest, userId, timezone } )
+            .values( { ...rest, userId, timezone, toBeSentAt } )
             .returning();
         return created;
     } );

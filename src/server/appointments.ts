@@ -5,6 +5,7 @@ import { appointment, user } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getRequest } from "@tanstack/react-start/server";
+import { toUtcDate } from "@/lib/to-utc";
 
 // ── List appointments ────────────────────────────────────────────────
 export const listAppointments = createServerFn( { method: "GET" } ).handler(
@@ -53,10 +54,13 @@ export const createAppointment = createServerFn( { method: "POST" } )
             timezone = userRecord?.timezone ?? "UTC";
         }
 
+        // Pre-compute UTC send time from local date + time + timezone
+        const toBeSentAt = toUtcDate( data.date, data.time, timezone );
+
         const { timezone: _tz, ...rest } = data;
         const [created] = await db
             .insert( appointment )
-            .values( { ...rest, userId, timezone } )
+            .values( { ...rest, userId, timezone, toBeSentAt } )
             .returning();
         return created;
     } );
@@ -73,6 +77,7 @@ const updateAppointmentSchema = z.object( {
     status: z.enum( ["upcoming", "completed", "cancelled"] ).optional(),
     notes: z.string().optional(),
     contactNumber: z.string().optional(),
+    timezone: z.string().optional(),
 } );
 
 export const updateAppointment = createServerFn( { method: "POST" } )
@@ -83,10 +88,28 @@ export const updateAppointment = createServerFn( { method: "POST" } )
         if ( !sessionData?.user?.id ) throw new Error( "Unauthorized" );
         const userId = sessionData.user.id;
 
-        const { id, ...updateData } = data;
+        const { id, timezone: clientTz, ...updateData } = data;
+
+        // Recompute toBeSentAt when date or time changes
+        const setPayload: Record<string, unknown> = { ...updateData };
+        if ( updateData.date || updateData.time ) {
+            // Need current values for any field not provided
+            const existing = await db.query.appointment.findFirst( {
+                where: and( eq( appointment.id, id ), eq( appointment.userId, userId ) ),
+                columns: { date: true, time: true, timezone: true },
+            } );
+            if ( !existing ) throw new Error( "Appointment not found" );
+
+            const finalDate = updateData.date ?? existing.date;
+            const finalTime = updateData.time ?? existing.time;
+            const finalTz = clientTz ?? existing.timezone ?? "UTC";
+            setPayload.toBeSentAt = toUtcDate( finalDate, finalTime, finalTz );
+            if ( clientTz ) setPayload.timezone = clientTz;
+        }
+
         const [updated] = await db
             .update( appointment )
-            .set( updateData )
+            .set( setPayload )
             .where(
                 and(
                     eq( appointment.id, id ),

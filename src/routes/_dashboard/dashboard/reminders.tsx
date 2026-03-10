@@ -21,6 +21,7 @@ import { Plus, Bell, Trash2, Pill, Calendar, Stethoscope, CheckCheck } from "luc
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReminderForm } from "@/components/dashboard/ReminderForm";
 import type { ReminderFormValues } from "@/components/dashboard/ReminderForm";
+import { formatLocalDateTime } from "@/lib/format-datetime";
 
 export const Route = createFileRoute( "/_dashboard/dashboard/reminders" )( {
     component: RemindersPage,
@@ -92,7 +93,7 @@ function RemindersPage() {
                     </div>
                     {r.description && <p className="text-xs text-muted-foreground mt-1 ml-6">{r.description}</p>}
                     <p className="text-xs text-muted-foreground mt-0.5 ml-6">
-                        {r.date} · {r.time}{r.timezone && r.timezone !== "UTC" ? ` (${r.timezone})` : ""}
+                        {formatLocalDateTime( r.date, r.time )}
                     </p>
                 </div>
                 <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0"

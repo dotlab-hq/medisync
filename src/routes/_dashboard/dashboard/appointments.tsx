@@ -29,9 +29,10 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Calendar, Clock, MapPin, Phone, Stethoscope, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { Plus, Calendar, MapPin, Phone, Stethoscope, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { AppointmentForm } from "@/components/dashboard/AppointmentForm";
 import type { AppointmentFormValues } from "@/components/dashboard/AppointmentForm";
+import { formatLocalDateTime } from "@/lib/format-datetime";
 
 export const Route = createFileRoute( "/_dashboard/dashboard/appointments" )( {
     component: AppointmentsPage,
@@ -150,10 +151,7 @@ function AppointmentsPage() {
                                         )}
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 pl-6">
                                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                <Calendar className="h-3 w-3" />{appt.date}
-                                            </span>
-                                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                <Clock className="h-3 w-3" />{appt.time}
+                                                <Calendar className="h-3 w-3" />{formatLocalDateTime( appt.date, appt.time )}
                                             </span>
                                             {appt.contactNumber && (
                                                 <span className="flex items-center gap-1 text-xs text-muted-foreground">

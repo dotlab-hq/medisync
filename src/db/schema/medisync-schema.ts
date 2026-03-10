@@ -144,6 +144,8 @@ export const appointment = schema.table(
         date: text( "date" ).notNull(),
         time: text( "time" ).notNull(),
         timezone: text( "timezone" ).notNull().default( "UTC" ),
+        /** Pre-computed UTC timestamp for when this notification should fire */
+        toBeSentAt: timestamp( "to_be_sent_at" ),
         status: text( "status" ).notNull().default( "upcoming" ),
         notes: text( "notes" ),
         contactNumber: text( "contact_number" ),
@@ -170,6 +172,8 @@ export const reminder = schema.table(
         date: text( "date" ).notNull(),
         time: text( "time" ).notNull(),
         timezone: text( "timezone" ).notNull().default( "UTC" ),
+        /** Pre-computed UTC timestamp for when this notification should fire */
+        toBeSentAt: timestamp( "to_be_sent_at" ),
         isCompleted: boolean( "is_completed" ).default( false ).notNull(),
         createdAt: timestamp( "created_at" ).defaultNow().notNull(),
         updatedAt: timestamp( "updated_at" )
