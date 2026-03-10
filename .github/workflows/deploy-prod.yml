@@ -69,6 +69,13 @@ jobs:
           echo -n "${{ secrets.RESEND_API_KEY }}" | vercel env add RESEND_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
           echo -n "${{ secrets.EMAIL_FROM }}" | vercel env add EMAIL_FROM production --token=${{ secrets.VERCEL_TOKEN }} --force
           echo -n "${{ secrets.APP_URL }}" | vercel env add APP_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_ACCESS_KEY_ID }}" | vercel env add AWS_ACCESS_KEY_ID production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" | vercel env add AWS_SECRET_ACCESS_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_REGION }}" | vercel env add AWS_REGION production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_S3_BUCKET }}" | vercel env add AWS_S3_BUCKET production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_S3_ENDPOINT }}" | vercel env add AWS_S3_ENDPOINT production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.MEDISYNC_PRIVATE_KEY }}" | vercel env add MEDISYNC_PRIVATE_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.RELAYX_API_KEY }}" | vercel env add RELAYX_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
