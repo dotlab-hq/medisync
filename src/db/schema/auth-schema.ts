@@ -13,6 +13,7 @@ import {
   healthMetric,
 } from "./medisync-schema";
 import { userNotificationSettings } from "./notification-schema";
+import { chatConversation } from "./chat-schema";
 
 export const user = schema.table( "user", {
   id: text( "id" ).primaryKey(),
@@ -103,6 +104,7 @@ export const userRelations = relations( user, ( { one, many } ) => ( {
   reminders: many( reminder ),
   healthMetrics: many( healthMetric ),
   notificationSettings: one( userNotificationSettings ),
+  chatConversations: many( chatConversation ),
 } ) );
 
 export const sessionRelations = relations( session, ( { one } ) => ( {
