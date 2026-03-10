@@ -5,6 +5,11 @@
 - User wants onboarding to collect all data (personal, address, medical, emergency contact) with SMS OTP phone verification as a mandatory step.
 - UI should use React Hook Form + shadcn Form components consistently across all steps.
 - Each file should stay under 200 lines — split step forms into separate component files.
+- Use vibrant color scheme: Mint Leaf (#3ab795), Celadon (#a0e8af), Muted Teal (#86baa1), Beige (#edead0), Golden Pollen (#ffcf56)
+- Header should show "Go to Dashboard" for logged-in users, not avatar/sign-out button
+- Locale switcher should use Select dropdown, not buttons. Hindi language support required.
+- All pages need loading skeletons and fadeInUp animations
+- Documents page needs multi-file XHR upload, tooltip for long filenames, storage at sidebar bottom
 
 ## Mistakes & Learnings
 
@@ -66,4 +71,19 @@
 **Problem:** `db.execute<T>` requires `T extends Record<string, unknown>`. TypeScript interfaces don't carry an index signature, so `DueReminderRow` as an interface fails the constraint.
 
 **Fix:** Use `type` aliases instead of `interface` for view-row shapes. Also `db.execute` returns `QueryResult<T>` whose rows are in `.rows`, not directly iterable.
+
+### deleteEmergencyContact missing ownership verification
+**Problem:** `deleteEmergencyContact` in `src/server/user.ts` verified the user was authenticated but did NOT verify the emergency contact belonged to the authenticated user. Any authenticated user could delete any other user's emergency contacts by guessing/knowing the contact ID.
+
+**Fix:** Added `and(eq(emergencyContact.id, data.id), eq(emergencyContact.userId, sessionData.user.id))` to the WHERE clause, ensuring only the owner can delete their own contacts. Also imported `and` from `drizzle-orm`.
+
+### Dynamic imports for heavy libraries
+**Problem:** `qrcode.react` and `NearbyMapEmbed` were eagerly imported in route files, adding to initial bundle.
+
+**Fix:** Used `React.lazy()` with `Suspense` + `Skeleton` fallbacks. The QR code library loads only when visiting the QR page, and maps load only on camps/geo pages.
+
+### Documents page over 600 lines
+**Problem:** `documents.tsx` was 637 lines — far over the 250-line limit and hard to maintain.
+
+**Fix:** Split into 8 files: route (208), skeleton (43), upload dialog (165), upload hook (142), folder sidebar (127), document grid (151), folder dialogs (157), tagify input (42). All under 250 lines.
 

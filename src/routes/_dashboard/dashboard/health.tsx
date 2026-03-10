@@ -38,6 +38,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Plus, Activity, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute( "/_dashboard/dashboard/health" )( {
     component: HealthMetricsPage,
@@ -92,7 +93,7 @@ function HealthMetricsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="animate-fade-in-up flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">Health Metrics</h1>
                     <p className="text-muted-foreground">
@@ -146,7 +147,10 @@ function HealthMetricsPage() {
             </div>
 
             {isLoading ? (
-                <p className="text-muted-foreground text-center py-8">Loading…</p>
+                <div className="space-y-3">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-48 w-full rounded-xl" />
+                </div>
             ) : metrics.length === 0 ? (
                 <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">

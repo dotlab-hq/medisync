@@ -17,40 +17,16 @@ import {
 } from 'lucide-react'
 import { m } from '@/paraglide/messages'
 
-export const Route = createFileRoute( '/_public/' )( { component: HomePage } )
+export const Route = createFileRoute('/_public/')({ component: HomePage })
 
 function getFeatures() {
   return [
-    {
-      icon: QrCode,
-      title: m.feature_qr_title(),
-      description: m.feature_qr_desc(),
-    },
-    {
-      icon: FileText,
-      title: m.feature_records_title(),
-      description: m.feature_records_desc(),
-    },
-    {
-      icon: Bell,
-      title: m.feature_reminders_title(),
-      description: m.feature_reminders_desc(),
-    },
-    {
-      icon: Activity,
-      title: m.feature_health_title(),
-      description: m.feature_health_desc(),
-    },
-    {
-      icon: Shield,
-      title: m.feature_contacts_title(),
-      description: m.feature_contacts_desc(),
-    },
-    {
-      icon: Heart,
-      title: m.feature_multilang_title(),
-      description: m.feature_multilang_desc(),
-    },
+    { icon: QrCode, title: m.feature_qr_title(), description: m.feature_qr_desc() },
+    { icon: FileText, title: m.feature_records_title(), description: m.feature_records_desc() },
+    { icon: Bell, title: m.feature_reminders_title(), description: m.feature_reminders_desc() },
+    { icon: Activity, title: m.feature_health_title(), description: m.feature_health_desc() },
+    { icon: Shield, title: m.feature_contacts_title(), description: m.feature_contacts_desc() },
+    { icon: Heart, title: m.feature_multilang_title(), description: m.feature_multilang_desc() },
   ]
 }
 
@@ -60,11 +36,11 @@ function HomePage() {
   return (
     <main className="px-4 pb-16 pt-10">
       {/* Hero */}
-      <section className="mx-auto max-w-4xl text-center py-16">
-        <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6">
+      <section className="animate-fade-in-up mx-auto max-w-4xl py-16 text-center">
+        <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-6xl">
           {m.hero_title()}
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+        <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
           {m.hero_subtitle()}
         </p>
         <div className="flex flex-wrap justify-center gap-4">
@@ -80,28 +56,31 @@ function HomePage() {
       {/* Features */}
       <section className="mx-auto max-w-6xl">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map( ( { icon: Icon, title, description } ) => (
-            <Card key={title} className="hover:border-primary/50 transition-colors">
+          {features.map(({ icon: Icon, title, description }, idx) => (
+            <Card
+              key={title}
+              className={`animate-fade-in-up stagger-${idx + 1} border-border/50 transition-all hover:border-primary/50 hover:shadow-lg`}
+            >
               <CardHeader>
-                <Icon className="h-8 w-8 text-primary mb-2" />
+                <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <Icon className="h-6 w-6 text-primary" />
+                </div>
                 <CardTitle>{title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>{description}</CardDescription>
+                <CardDescription className="text-sm leading-relaxed">
+                  {description}
+                </CardDescription>
               </CardContent>
             </Card>
-          ) )}
+          ))}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-2xl text-center py-16">
-        <h2 className="text-3xl font-bold mb-4">
-          {m.cta_title()}
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          {m.cta_subtitle()}
-        </p>
+      <section className="animate-fade-in-up stagger-5 mx-auto max-w-2xl py-16 text-center">
+        <h2 className="mb-4 text-3xl font-bold">{m.cta_title()}</h2>
+        <p className="mb-6 text-muted-foreground">{m.cta_subtitle()}</p>
         <Button size="lg" asChild>
           <Link to="/auth/signup">{m.cta_button()}</Link>
         </Button>

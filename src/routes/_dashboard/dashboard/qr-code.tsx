@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { getOrCreateQrCode, regenerateQrCode } from "@/server/qr-code";
 import {
     Card,
@@ -11,7 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QrCode, RefreshCw, Share2 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const LazyQRCodeSVG = lazy(() =>
+  import("qrcode.react").then((mod) => ({ default: mod.QRCodeSVG }))
+);
 
 export const Route = createFileRoute( "/_dashboard/dashboard/qr-code" )( {
     component: QrCodePage,
@@ -36,7 +41,7 @@ function QrCodePage() {
 
     return (
         <div className="space-y-6">
-            <div>
+            <div className="animate-fade-in-up">
                 <h1 className="text-2xl font-bold">Emergency QR Code</h1>
                 <p className="text-muted-foreground">
                     Share your emergency medical profile via QR code
@@ -56,16 +61,18 @@ function QrCodePage() {
                     </CardHeader>
                     <CardContent className="flex flex-col items-center gap-4">
                         {isLoading ? (
-                            <div className="h-48 w-48 bg-muted animate-pulse rounded" />
+                            <Skeleton className="h-48 w-48 rounded-lg" />
                         ) : qr ? (
                             <>
                                 <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <QRCodeSVG
+                                    <Suspense fallback={<Skeleton className="h-48 w-48" />}>
+                                      <LazyQRCodeSVG
                                         value={`${typeof window !== "undefined" ? window.location.origin : ""}${qr.qrCodeData}`}
                                         size={192}
                                         level="H"
                                         includeMargin={false}
-                                    />
+                                      />
+                                    </Suspense>
                                 </div>
                                 <Badge variant="outline" className="text-xs">
                                     Created{" "}

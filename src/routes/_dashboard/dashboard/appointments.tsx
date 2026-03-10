@@ -28,6 +28,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Calendar, Clock, MapPin, Phone, Stethoscope, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { AppointmentForm } from "@/components/dashboard/AppointmentForm";
 import type { AppointmentFormValues } from "@/components/dashboard/AppointmentForm";
@@ -89,7 +90,7 @@ function AppointmentsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="animate-fade-in-up flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Appointments</h1>
                     <p className="text-muted-foreground text-sm mt-0.5">Manage your doctor visits</p>
@@ -118,7 +119,7 @@ function AppointmentsPage() {
 
             {isLoading ? (
                 <div className="space-y-3">
-                    {[1, 2, 3].map( i => <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" /> )}
+                    {[1, 2, 3].map( i => <Skeleton key={i} className="h-24 w-full rounded-lg" /> )}
                 </div>
             ) : filtered.length === 0 ? (
                 <Card>
