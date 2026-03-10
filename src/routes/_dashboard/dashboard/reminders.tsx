@@ -18,6 +18,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Bell, Trash2, Pill, Calendar, Stethoscope, CheckCheck } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ReminderForm } from "@/components/dashboard/ReminderForm";
 import type { ReminderFormValues } from "@/components/dashboard/ReminderForm";
 
@@ -104,7 +105,7 @@ function RemindersPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="animate-fade-in-up flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Reminders</h1>
                     <p className="text-muted-foreground text-sm mt-0.5">Medications, appointments & checkups</p>
@@ -121,7 +122,7 @@ function RemindersPage() {
             </div>
 
             {isLoading ? (
-                <div className="space-y-3">{[1, 2, 3].map( i => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" /> )}</div>
+                <div className="space-y-3">{[1, 2, 3].map( i => <Skeleton key={i} className="h-16 w-full rounded-xl" /> )}</div>
             ) : reminders.length === 0 ? (
                 <Card><CardContent className="flex flex-col items-center justify-center py-16 gap-3">
                     <Bell className="h-10 w-10 text-muted-foreground/40" />

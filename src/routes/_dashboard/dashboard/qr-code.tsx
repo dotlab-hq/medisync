@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QrCode, RefreshCw, Share2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { QRCodeSVG } from "qrcode.react";
 
 export const Route = createFileRoute( "/_dashboard/dashboard/qr-code" )( {
@@ -36,7 +37,7 @@ function QrCodePage() {
 
     return (
         <div className="space-y-6">
-            <div>
+            <div className="animate-fade-in-up">
                 <h1 className="text-2xl font-bold">Emergency QR Code</h1>
                 <p className="text-muted-foreground">
                     Share your emergency medical profile via QR code
@@ -56,7 +57,7 @@ function QrCodePage() {
                     </CardHeader>
                     <CardContent className="flex flex-col items-center gap-4">
                         {isLoading ? (
-                            <div className="h-48 w-48 bg-muted animate-pulse rounded" />
+                            <Skeleton className="h-48 w-48 rounded-lg" />
                         ) : qr ? (
                             <>
                                 <div className="p-3 bg-white rounded-lg shadow-sm">

@@ -23,9 +23,9 @@ function DeveloperPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Developer</h1>
+            <h1 className="animate-fade-in-up text-2xl font-bold">Developer</h1>
 
-            <Card>
+            <Card className="animate-fade-in-up stagger-1 border-border/50">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Key className="h-5 w-5" />
