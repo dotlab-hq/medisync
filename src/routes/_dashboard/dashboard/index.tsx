@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link  } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
     Card,
@@ -29,7 +29,7 @@ import {
     Shield,
     MoreHorizontal,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+
 import { getUserProfile } from "@/server/user";
 import { listAllDocuments } from "@/server/documents";
 import { listReminders } from "@/server/reminders";
