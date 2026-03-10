@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useChatStore } from "@/components/chat/chat-store";
 import {
     listConversations,
-    createConversation,
     deleteConversation,
 } from "@/server/chat";
 
@@ -27,18 +26,26 @@ function ChatPage() {
     const [loading, setLoading] = useState( true );
     const { activeConversationId, setActiveConversation } = useChatStore();
 
-    // Load conversations on mount
+    // Load conversations on mount — use functional update so any optimistic additions
+    // made before the fetch resolves are preserved at the top of the list.
     useEffect( () => {
         listConversations()
-            .then( ( data ) => setConversations( data ) )
+            .then( ( data ) => {
+                setConversations( ( prev ) => {
+                    const serverIds = new Set( data.map( ( c ) => c.id ) );
+                    // Keep any optimistically-added items not yet returned by the server
+                    const optimistic = prev.filter( ( c ) => !serverIds.has( c.id ) );
+                    return [...optimistic, ...data];
+                } );
+            } )
             .catch( () => { } )
             .finally( () => setLoading( false ) );
     }, [] );
 
-    const handleNew = useCallback( async () => {
-        const conv = await createConversation();
-        setConversations( ( prev ) => [conv, ...prev] );
-        setActiveConversation( conv.id );
+    const handleNew = useCallback( () => {
+        // Just clear active conversation — navigates to empty chat.
+        // Conversation is created atomically on first message send (in ChatContainer).
+        setActiveConversation( null );
     }, [setActiveConversation] );
 
     const handleSelect = useCallback(
@@ -60,26 +67,33 @@ function ChatPage() {
     );
 
     const handleConversationCreated = useCallback(
-        ( _id: string ) => {
-            // Refresh list
-            listConversations()
-                .then( ( data ) => setConversations( data ) )
-                .catch( () => { } );
+        ( conv: { id: string; title: string; updatedAt: Date } ) => {
+            // Optimistically prepend at top — no async refresh needed
+            setConversations( ( prev ) => [
+                conv,
+                ...prev.filter( ( c ) => c.id !== conv.id ),
+            ] );
         },
         [],
     );
 
     const handleTitleUpdated = useCallback(
         ( id: string, title: string ) => {
-            setConversations( ( prev ) =>
-                prev.map( ( c ) => ( c.id === id ? { ...c, title } : c ) ),
-            );
+            // Promote the updated conversation to the top of the list
+            setConversations( ( prev ) => {
+                const conv = prev.find( ( c ) => c.id === id );
+                if ( !conv ) return prev;
+                return [
+                    { ...conv, title, updatedAt: new Date() },
+                    ...prev.filter( ( c ) => c.id !== id ),
+                ];
+            } );
         },
         [],
     );
 
     return (
-        <div className="relative flex h-[calc(100vh-3.5rem)] lg:h-screen">
+        <div className="-mx-4 lg:-mx-8 -my-6 relative flex h-screen overflow-hidden">
             <Suspense
                 fallback={
                     <div className="w-64 space-y-2 border-r border-border/50 p-3">

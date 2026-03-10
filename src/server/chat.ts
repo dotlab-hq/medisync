@@ -33,14 +33,27 @@ const renameSchema = z.object( {
     title: z.string().min( 1 ),
 } );
 
+const messageSchema = z.object( {
+    role: z.string().min( 1 ),
+    content: z.string(),
+    reasoning: z.string().nullish(),
+    parts: z.array( z.record( z.unknown() ) ).optional(),
+    attachments: z.array( z.record( z.unknown() ) ).nullish(),
+    annotations: z.array( z.record( z.unknown() ) ).nullish(),
+    inputTokens: z.number().nullish(),
+    outputTokens: z.number().nullish(),
+    modelUsed: z.string().nullish(),
+} );
+
 const saveMessagesSchema = z.object( {
     conversationId: z.string().min( 1 ),
-    messages: z.array(
-        z.object( {
-            role: z.string().min( 1 ),
-            content: z.string().min( 1 ),
-        } ),
-    ),
+    messages: z.array( messageSchema ),
+} );
+
+const createAndSendSchema = z.object( {
+    content: z.string().min( 1 ),
+    parts: z.array( z.record( z.unknown() ) ).optional(),
+    attachments: z.array( z.record( z.unknown() ) ).nullish(),
 } );
 
 // ── List conversations ───────────────────────────────────────────────
@@ -96,7 +109,7 @@ export const deleteConversation = createServerFn( { method: "POST" } )
         return { success: true };
     } );
 
-// ── Save messages ────────────────────────────────────────────────────
+// ── Save messages (with full metadata) ───────────────────────────────
 export const saveMessages = createServerFn( { method: "POST" } )
     .inputValidator( ( data: unknown ) => saveMessagesSchema.parse( data ) )
     .handler( async ( { data } ) => {
@@ -108,6 +121,13 @@ export const saveMessages = createServerFn( { method: "POST" } )
             conversationId: data.conversationId,
             role: m.role,
             content: m.content,
+            reasoning: m.reasoning ?? null,
+            parts: ( m.parts as Array<{ type: string;[key: string]: unknown }> ) ?? [],
+            attachments: ( m.attachments as Array<{ name: string; type: string; size: number; url: string }> ) ?? null,
+            annotations: m.annotations ?? null,
+            inputTokens: m.inputTokens ?? null,
+            outputTokens: m.outputTokens ?? null,
+            modelUsed: m.modelUsed ?? null,
         } ) );
         await db.insert( chatMessage ).values( rows );
 
@@ -118,6 +138,34 @@ export const saveMessages = createServerFn( { method: "POST" } )
             .where( eq( chatConversation.id, data.conversationId ) );
 
         return { success: true };
+    } );
+
+// ── Create conversation AND send first message (atomic) ──────────────
+export const createConversationAndSend = createServerFn( { method: "POST" } )
+    .inputValidator( ( data: unknown ) => createAndSendSchema.parse( data ) )
+    .handler( async ( { data } ) => {
+        const session = await getSession();
+
+        // Auto-title from first message (truncated)
+        const title = data.content.substring( 0, 100 ) || "New Chat";
+
+        const [conv] = await db
+            .insert( chatConversation )
+            .values( { userId: session.user.id, title } )
+            .returning();
+
+        const [msg] = await db
+            .insert( chatMessage )
+            .values( {
+                conversationId: conv.id,
+                role: "user",
+                content: data.content,
+                parts: ( data.parts as Array<{ type: string;[key: string]: unknown }> ) ?? [{ type: "text", text: data.content }],
+                attachments: ( data.attachments as Array<{ name: string; type: string; size: number; url: string }> ) ?? null,
+            } )
+            .returning();
+
+        return { conversation: conv, message: msg };
     } );
 
 // ── Rename conversation ──────────────────────────────────────────────

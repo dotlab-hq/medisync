@@ -77,6 +77,16 @@
 
 **Fix:** Added `and(eq(emergencyContact.id, data.id), eq(emergencyContact.userId, sessionData.user.id))` to the WHERE clause, ensuring only the owner can delete their own contacts. Also imported `and` from `drizzle-orm`.
 
+### useEffect activeConversationId wipes chat messages mid-stream
+**Problem:** `ChatContainer` had a `useEffect([activeConversationId])` that called `setMessages([])` whenever the active conversation changed. When `handleSend` auto-created a new conversation and called `setActiveConversation(convId)`, this effect fired AFTER the render and wiped the user's message from the useChat state. Since the user message was already gone, the save effect couldn't find it. Result: messages never persisted and the user message appeared blank in the UI.
+
+**Fix:** Added `skipNextResetRef = useRef(false)`. In `handleSend`, set it to `true` just before calling `setActiveConversation` when auto-creating a conversation. The reset effect checks the flag and skips clearing messages for that one activation.
+
+### Initial listConversations fetch overwrites optimistic sidebar additions
+**Problem:** The initial `listConversations()` call on page mount used `.then(data => setConversations(data))` — a plain overwrite. If a user sent a message before the fetch resolved (auto-creating a new conversation via `handleConversationCreated`), the fetch resolving would wipe the optimistically-added item, making the new chat appear to "jump" positions.
+
+**Fix:** Changed to a functional update: `setConversations(prev => { const serverIds = new Set(...); const optimistic = prev.filter(c => !serverIds.has(c.id)); return [...optimistic, ...data]; })`. This preserves any optimistic additions that aren't yet reflected in the server response.
+
 ### Dynamic imports for heavy libraries
 **Problem:** `qrcode.react` and `NearbyMapEmbed` were eagerly imported in route files, adding to initial bundle.
 

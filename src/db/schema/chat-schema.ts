@@ -1,7 +1,10 @@
 import { relations } from "drizzle-orm";
-import { text, timestamp, index } from "drizzle-orm/pg-core";
+import { boolean, integer, json, text, timestamp, index } from "drizzle-orm/pg-core";
 import { schema } from "./schema";
 import { user } from "./auth-schema";
+
+// ── Enums ────────────────────────────────────────────────────────────
+export const feedbackTypeEnum = schema.enum( "feedback_type", ["LIKED", "DISLIKED"] );
 
 // ── Chat Conversation ────────────────────────────────────────────────
 export const chatConversation = schema.table(
@@ -33,6 +36,14 @@ export const chatMessage = schema.table(
             .references( () => chatConversation.id, { onDelete: "cascade" } ),
         role: text( "role" ).notNull(), // "user" | "assistant" | "system"
         content: text( "content" ).notNull(),
+        reasoning: text( "reasoning" ),
+        parts: json( "parts" ).$type<Array<{ type: string; text?: string; content?: string;[key: string]: unknown }>>().default( [] ).notNull(),
+        attachments: json( "attachments" ).$type<Array<{ name: string; type: string; size: number; url: string }>>(),
+        annotations: json( "annotations" ),
+        inputTokens: integer( "input_tokens" ),
+        outputTokens: integer( "output_tokens" ),
+        modelUsed: text( "model_used" ),
+        userFeedback: feedbackTypeEnum( "user_feedback" ),
         createdAt: timestamp( "created_at" ).defaultNow().notNull(),
     },
     ( table ) => [

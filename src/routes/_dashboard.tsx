@@ -3,22 +3,22 @@ import { lazy, Suspense } from "react";
 import { getSession, getOnboardingStatus } from "@/server/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const DashboardSidebar = lazy(() => import("@/components/DashboardSidebar"));
+const DashboardSidebar = lazy( () => import( "@/components/DashboardSidebar" ) );
 
-export const Route = createFileRoute("/_dashboard")({
+export const Route = createFileRoute( "/_dashboard" )( {
   beforeLoad: async () => {
     const session = await getSession();
-    if (!session?.user) {
-      throw redirect({ to: "/auth/login" });
+    if ( !session?.user ) {
+      throw redirect( { to: "/auth/login" } );
     }
     const { onboardingCompleted } = await getOnboardingStatus();
-    if (!onboardingCompleted) {
-      throw redirect({ to: "/onboarding" });
+    if ( !onboardingCompleted ) {
+      throw redirect( { to: "/onboarding" } );
     }
     return { session };
   },
   component: DashboardLayout,
-});
+} );
 
 function DashboardLayout() {
   return (
@@ -26,8 +26,8 @@ function DashboardLayout() {
       <Suspense fallback={<SidebarSkeleton />}>
         <DashboardSidebar />
       </Suspense>
-      <main className="flex-1 overflow-x-hidden">
-        <div className="container mx-auto py-6 px-4 lg:px-8">
+      <main className="flex-1 overflow-hidden">
+        <div className="container mx-auto h-full overflow-y-auto py-6 px-4 lg:px-8" id="dashboard-main">
           <Outlet />
         </div>
       </main>
@@ -42,9 +42,9 @@ function SidebarSkeleton() {
         <Skeleton className="h-6 w-28" />
       </div>
       <div className="space-y-2 p-4">
-        {Array.from({ length: 7 }).map((_, i) => (
+        {Array.from( { length: 7 } ).map( ( _, i ) => (
           <Skeleton key={i} className="h-9 w-full rounded-lg" />
-        ))}
+        ) )}
       </div>
     </aside>
   );

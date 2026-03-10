@@ -35,7 +35,7 @@ export const Route = createFileRoute( "/api/chat/" )( {
                     const listFilesTool = createListUserFilesTool( userId );
 
                     const stream = chat( {
-                        adapter: groqChat( "llama-3.3-70b-versatile" ),
+                        adapter: groqChat( "openai/gpt-oss-120b" ),
                         messages: [
                             { role: "system", content: SYSTEM_PROMPT },
                             ...messages,

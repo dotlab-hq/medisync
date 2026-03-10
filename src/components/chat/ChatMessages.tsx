@@ -6,15 +6,28 @@ import { Bot } from "lucide-react";
 type MessagePart = {
     type: string;
     content?: string;
+    text?: string;
     name?: string;
     input?: Record<string, unknown>;
     output?: Record<string, unknown>;
+};
+
+type Attachment = {
+    name: string;
+    type: string;
+    size: number;
+    url: string;
 };
 
 type UIMessage = {
     id: string;
     role: "user" | "assistant" | "system";
     parts: MessagePart[];
+    reasoning?: string | null;
+    attachments?: Attachment[] | null;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
+    modelUsed?: string | null;
 };
 
 type ChatMessagesProps = {
@@ -32,7 +45,7 @@ function renderParts( parts: MessagePart[] ) {
             );
         }
         if ( part.type === "text" ) {
-            return <span key={idx}>{part.content}</span>;
+            return <span key={idx}>{part.content ?? part.text}</span>;
         }
         if ( part.type === "tool-call" ) {
             return (
@@ -56,7 +69,6 @@ function renderParts( parts: MessagePart[] ) {
 }
 
 function renderToolOutput( output: Record<string, unknown> ) {
-    // If the tool returned a file URL, show a clickable link
     if ( "url" in output && "fileName" in output ) {
         return (
             <a
@@ -69,7 +81,6 @@ function renderToolOutput( output: Record<string, unknown> ) {
             </a>
         );
     }
-    // For list_user_files output
     if ( "files" in output && Array.isArray( output.files ) ) {
         return (
             <ul className="list-inside list-disc space-y-0.5">
@@ -99,7 +110,15 @@ export default function ChatMessages( { messages, isLoading }: ChatMessagesProps
             )}
 
             {messages.map( ( msg ) => (
-                <MessageBubble key={msg.id} role={msg.role}>
+                <MessageBubble
+                    key={msg.id}
+                    role={msg.role}
+                    reasoning={msg.reasoning}
+                    attachments={msg.attachments}
+                    inputTokens={msg.inputTokens}
+                    outputTokens={msg.outputTokens}
+                    modelUsed={msg.modelUsed}
+                >
                     {renderParts( msg.parts )}
                 </MessageBubble>
             ) )}
