@@ -8,7 +8,7 @@ import {
     medicalInformation,
     emergencyContact,
 } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getRequest } from "@tanstack/react-start/server";
 
@@ -212,6 +212,11 @@ export const deleteEmergencyContact = createServerFn( { method: "POST" } )
 
         await db
             .delete( emergencyContact )
-            .where( eq( emergencyContact.id, data.id ) );
+            .where(
+                and(
+                    eq( emergencyContact.id, data.id ),
+                    eq( emergencyContact.userId, sessionData.user.id ),
+                ),
+            );
         return { success: true };
     } );
