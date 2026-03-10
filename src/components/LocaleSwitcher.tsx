@@ -1,46 +1,38 @@
-// Locale switcher refs:
-// - Paraglide docs: https://inlang.com/m/gerre34r/library-inlang-paraglideJs
-// - Router example: https://github.com/TanStack/router/tree/main/examples/react/i18n-paraglide@switching-locale
 import { getLocale, locales, setLocale } from '@/paraglide/runtime'
-import { m } from '@/paraglide/messages'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Globe } from 'lucide-react'
+
+const localeLabels: Record<string, string> = {
+  en: 'EN',
+  de: 'DE',
+  hi: 'हि',
+}
 
 export default function ParaglideLocaleSwitcher() {
   const currentLocale = getLocale()
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        gap: '0.5rem',
-        alignItems: 'center',
-        color: 'inherit',
-      }}
-      aria-label={m.language_label()}
-    >
-      <span style={{ opacity: 0.85 }}>
-        {m.current_locale( { locale: currentLocale } )}
-      </span>
-      <div style={{ display: 'flex', gap: '0.25rem' }}>
-        {locales.map( ( locale ) => (
-          <button
-            key={locale}
-            onClick={() => setLocale( locale )}
-            aria-pressed={locale === currentLocale}
-            style={{
-              cursor: 'pointer',
-              padding: '0.35rem 0.75rem',
-              borderRadius: '999px',
-              border: '1px solid @d1d5db',
-              background: locale === currentLocale ? '@0f172a' : 'transparent',
-              color: locale === currentLocale ? '@f8fafc' : 'inherit',
-              fontWeight: locale === currentLocale ? 700 : 500,
-              letterSpacing: '0.01em',
-            }}
-          >
-            {locale.toUpperCase()}
-          </button>
-        ) )}
-      </div>
-    </div>
+    <Select value={currentLocale} onValueChange={(val) => setLocale(val)}>
+      <SelectTrigger
+        size="sm"
+        className="h-9 w-auto min-w-[4.5rem] gap-1.5 rounded-lg border-border/50 bg-muted/50 px-2.5 text-sm font-medium"
+      >
+        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {locales.map((locale) => (
+          <SelectItem key={locale} value={locale}>
+            {localeLabels[locale] ?? locale.toUpperCase()}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
