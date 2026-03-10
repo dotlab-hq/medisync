@@ -4,8 +4,7 @@ import {
     generatePresignedUploadUrl,
     createDocument,
 } from "@/server/documents";
-
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+import { MAX_FILE_BYTES } from "@/lib/utils";
 
 export interface FileUploadEntry {
     file: File;

@@ -129,7 +129,7 @@ export function PersonalInfoCard({ profile, isPending, onSubmit, onPhoneChange }
                 id="dateOfBirth" name="dateOfBirth" type="date"
                 defaultValue={
                   profile?.dateOfBirth
-                    ? new Date(String(profile.dateOfBirth)).toISOString().split("T")[0]
+                    ? new Date(profile.dateOfBirth instanceof Date ? profile.dateOfBirth.toISOString() : String(profile.dateOfBirth)).toISOString().split("T")[0]
                     : ""
                 }
               />

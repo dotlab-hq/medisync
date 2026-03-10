@@ -11,7 +11,7 @@ import { Globe } from 'lucide-react'
 const localeLabels: Record<string, string> = {
   en: 'EN',
   de: 'DE',
-  hi: 'हि',
+  hi: 'HI',
 }
 
 export default function ParaglideLocaleSwitcher() {
