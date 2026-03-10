@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { getOrCreateQrCode, regenerateQrCode } from "@/server/qr-code";
 import {
     Card,
@@ -12,7 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { QrCode, RefreshCw, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { QRCodeSVG } from "qrcode.react";
+
+const LazyQRCodeSVG = lazy(() =>
+  import("qrcode.react").then((mod) => ({ default: mod.QRCodeSVG }))
+);
 
 export const Route = createFileRoute( "/_dashboard/dashboard/qr-code" )( {
     component: QrCodePage,
@@ -61,12 +65,14 @@ function QrCodePage() {
                         ) : qr ? (
                             <>
                                 <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <QRCodeSVG
+                                    <Suspense fallback={<Skeleton className="h-48 w-48" />}>
+                                      <LazyQRCodeSVG
                                         value={`${typeof window !== "undefined" ? window.location.origin : ""}${qr.qrCodeData}`}
                                         size={192}
                                         level="H"
                                         includeMargin={false}
-                                    />
+                                      />
+                                    </Suspense>
                                 </div>
                                 <Badge variant="outline" className="text-xs">
                                     Created{" "}

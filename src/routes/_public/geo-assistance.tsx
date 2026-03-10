@@ -6,9 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { lazy, Suspense } from "react";
 import { MapPin, Phone, Hospital } from "lucide-react";
 import { m } from "@/paraglide/messages";
-import { NearbyMapEmbed } from "@/components/NearbyMapEmbed";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const NearbyMapEmbed = lazy(() =>
+  import("@/components/NearbyMapEmbed").then((mod) => ({ default: mod.NearbyMapEmbed }))
+);
 
 export const Route = createFileRoute("/_public/geo-assistance")({
   component: GeoAssistancePage,
@@ -59,7 +64,9 @@ function GeoAssistancePage() {
           <CardDescription>Live map showing hospitals based on your current location.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <NearbyMapEmbed query="hospital near me" title="Hospitals near me" heightClass="h-[420px]" />
+          <Suspense fallback={<Skeleton className="h-[420px] w-full rounded-xl" />}>
+            <NearbyMapEmbed query="hospital near me" title="Hospitals near me" heightClass="h-[420px]" />
+          </Suspense>
           <a href="https://www.google.com/maps/search/hospital+near+me" target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary hover:underline">
             Open full map in Google Maps ↗
           </a>

@@ -6,10 +6,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { lazy, Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Heart, MapPin, Calendar, Map } from "lucide-react";
 import { m } from "@/paraglide/messages";
-import { NearbyMapEmbed } from "@/components/NearbyMapEmbed";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const NearbyMapEmbed = lazy(() =>
+  import("@/components/NearbyMapEmbed").then((mod) => ({ default: mod.NearbyMapEmbed }))
+);
 
 export const Route = createFileRoute("/_public/camps")({
   component: CampsPage,
@@ -41,7 +46,9 @@ function CampsPage() {
           <CardDescription>Live map of health camps and medical drives based on your location.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <NearbyMapEmbed query="health camp medical camp near me" title="Health camps near me" heightClass="h-[400px]" />
+          <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-xl" />}>
+            <NearbyMapEmbed query="health camp medical camp near me" title="Health camps near me" heightClass="h-[400px]" />
+          </Suspense>
           <a href="https://www.google.com/maps/search/health+camp+near+me" target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary hover:underline">
             Open full map in Google Maps ↗
           </a>
@@ -57,7 +64,9 @@ function CampsPage() {
           <CardDescription>Find nearby hospitals and clinics for immediate care.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <NearbyMapEmbed query="hospital clinic near me" title="Hospitals near me" heightClass="h-[400px]" />
+          <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-xl" />}>
+            <NearbyMapEmbed query="hospital clinic near me" title="Hospitals near me" heightClass="h-[400px]" />
+          </Suspense>
           <a href="https://www.google.com/maps/search/hospital+near+me" target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary hover:underline">
             Open full map in Google Maps ↗
           </a>
