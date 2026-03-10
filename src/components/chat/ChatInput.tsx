@@ -1,132 +1,205 @@
-import type { KeyboardEvent, ChangeEvent } from "react";
-import { useState, useRef, useCallback } from "react";
-import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+import { ArrowUp, Paperclip, Square } from "lucide-react";
+import { useCallback, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Textarea } from "@/components/ui/textarea";
+import { useMicDictateStore } from "./stores/useMicDictate";
+import { useFileStore } from "./stores/useFileStore";
+import { ChatTextarea } from "./input/ChatTextarea";
+import { InputUploadFiles } from "./input/InputUploadFiles";
+import { RecordingInterface } from "./input/RecordingInterface";
+import { MicButton } from "./input/MicButton"; import { useChatTextarea } from "./hooks/useChatTextarea"; import { useChatTextareaStore } from "./stores/useChatTextarea";
 
 type ChatInputProps = {
     onSend: ( text: string, files?: File[] ) => void;
+    onStop?: () => void;
     disabled?: boolean;
     placeholder?: string;
 };
 
-export default function ChatInput( { onSend, disabled, placeholder }: ChatInputProps ) {
-    const [input, setInput] = useState( "" );
-    const [files, setFiles] = useState<File[]>( [] );
-    const textareaRef = useRef<HTMLTextAreaElement>( null );
+export default function ChatInput( { onSend, onStop, disabled, placeholder }: ChatInputProps ) {
+    const {
+        textareaRef,
+        value,
+        lineHeight,
+        handleInput,
+    } = useChatTextarea( {
+        lineHeight: 24,
+        maxLines: 7,
+    } );
+
+    const { setText } = useChatTextareaStore();
     const fileInputRef = useRef<HTMLInputElement>( null );
 
-    const handleSend = useCallback( () => {
-        const trimmed = input.trim();
-        if ( ( !trimmed && files.length === 0 ) || disabled ) return;
-        onSend( trimmed, files.length > 0 ? files : undefined );
-        setInput( "" );
-        setFiles( [] );
-        setTimeout( () => textareaRef.current?.focus(), 0 );
-    }, [input, files, disabled, onSend] );
-
-    const handleKeyDown = ( e: KeyboardEvent<HTMLTextAreaElement> ) => {
-        if ( e.key === "Enter" && !e.shiftKey ) {
-            e.preventDefault();
-            handleSend();
+    useEffect( () => {
+        if ( textareaRef.current ) {
+            textareaRef.current.focus();
         }
-    };
+    }, [] );
 
-    const handleFileSelect = () => fileInputRef.current?.click();
+    const { isRecording } = useMicDictateStore();
+    const { files, hasFiles, addFiles, clearFiles } = useFileStore();
 
-    const handleFileChange = ( e: ChangeEvent<HTMLInputElement> ) => {
-        const selected = Array.from( e.target.files || [] );
-        setFiles( ( prev ) => [...prev, ...selected] );
-        if ( fileInputRef.current ) fileInputRef.current.value = "";
-    };
+    const handleSend = useCallback( () => {
+        const text = value.trim();
+        if ( ( !text && !hasFiles ) || disabled ) return;
 
-    const removeFile = ( index: number ) => {
-        setFiles( ( prev ) => prev.filter( ( _, i ) => i !== index ) );
-    };
+        onSend( text, hasFiles ? files : undefined );
+
+        // Reset textarea
+        if ( textareaRef.current ) {
+            textareaRef.current.value = "";
+            textareaRef.current.style.height = `${lineHeight}px`;
+            setText( "" );
+        }
+        clearFiles();
+    }, [value, files, hasFiles, disabled, onSend, textareaRef, lineHeight, setText, clearFiles] );
+
+    const handleKeyDown = useCallback(
+        ( e: KeyboardEvent ) => {
+            if ( e.key === "Enter" && !e.shiftKey ) {
+                e.preventDefault();
+                handleSend();
+            }
+        },
+        [handleSend]
+    );
+
+    // Attach keydown to textarea
+    useEffect( () => {
+        const textarea = textareaRef.current;
+        if ( !textarea ) return;
+        textarea.addEventListener( "keydown", handleKeyDown );
+        return () => textarea.removeEventListener( "keydown", handleKeyDown );
+    }, [textareaRef, handleKeyDown] );
+
+    const handleFileSelect = useCallback( () => {
+        fileInputRef.current?.click();
+    }, [] );
+
+    const handleFileChange = useCallback(
+        ( e: React.ChangeEvent<HTMLInputElement> ) => {
+            const selectedFiles = Array.from( e.target.files || [] );
+            addFiles( selectedFiles );
+            if ( fileInputRef.current ) fileInputRef.current.value = "";
+        },
+        [addFiles]
+    );
+
+    const handleTranscribed = useCallback(
+        ( text: string ) => {
+            if ( textareaRef.current ) {
+                const newValue = value ? `${value} ${text}` : text;
+                textareaRef.current.value = newValue;
+                setText( newValue );
+
+                // Manually trigger height adjustment
+                textareaRef.current.style.height = "auto";
+                const scrollHeight = textareaRef.current.scrollHeight;
+                const maxHeight = lineHeight * 7; // maxLines
+                textareaRef.current.style.height = `${Math.min( scrollHeight, maxHeight )}px`;
+            }
+        },
+        [value, textareaRef, setText, lineHeight]
+    );
 
     return (
         <div className="border-t border-border/50 bg-background p-3">
             <div className="mx-auto max-w-3xl">
-                {/* Hidden file input */}
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileChange}
-                    aria-label="Attach files"
-                />
-
-                {/* Attached files preview */}
-                {files.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {files.map( ( file, idx ) => (
-                            <div
-                                key={`${file.name}-${idx}`}
-                                className="flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1 text-xs"
-                            >
-                                <span className="truncate max-w-37.5">{file.name}</span>
-                                <button
-                                    onClick={() => removeFile( idx )}
-                                    className="shrink-0 rounded-full p-0.5 hover:bg-background/80"
-                                    title="Remove file"
-                                >
-                                    <X className="h-3 w-3" />
-                                </button>
-                            </div>
-                        ) )}
-                    </div>
-                )}
-
-                {/* Input area */}
                 <div
                     className={cn(
-                        "flex items-end gap-2 rounded-2xl border border-border bg-card px-3 py-2",
-                        "focus-within:ring-1 focus-within:ring-ring",
+                        "flex flex-col",
+                        "border border-border bg-card",
+                        "rounded-2xl px-2",
+                        "w-full"
                     )}
                 >
-                    {/* Attach button */}
-                    <button
-                        onClick={handleFileSelect}
-                        className={cn(
-                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                            "text-muted-foreground hover:text-foreground hover:bg-muted",
-                        )}
-                        title="Attach files"
-                    >
-                        <Paperclip className="h-4 w-4" />
-                    </button>
-
-                    {/* Textarea */}
-                    <Textarea
-                        ref={textareaRef}
-                        value={input}
-                        onChange={( e ) => setInput( e.target.value )}
-                        onKeyDown={handleKeyDown}
-                        placeholder={placeholder || "Ask MediSync AI anything..."}
-                        disabled={disabled}
-                        className="min-h-10 max-h-40 flex-1 resize-none border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
-                        rows={1}
+                    {/* Hidden file input */}
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileChange}
+                        aria-label="Upload files"
                     />
 
-                    {/* Send / Stop button */}
-                    <button
-                        onClick={handleSend}
-                        disabled={( !input.trim() && files.length === 0 ) || disabled}
+                    {/* Uploaded files preview */}
+                    {!isRecording && <InputUploadFiles />}
+
+                    <div
                         className={cn(
-                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                            ( input.trim() || files.length > 0 ) && !disabled
-                                ? "bg-primary text-primary-foreground hover:opacity-90"
-                                : "bg-muted text-muted-foreground cursor-not-allowed",
+                            "w-full transition-all duration-200",
+                            "py-3 flex flex-col gap-3 px-4"
                         )}
-                        title={disabled ? "Stop" : "Send message"}
                     >
-                        {disabled ? (
-                            <Square className="h-3 w-3 fill-current" />
+                        {/* Recording UI */}
+                        {isRecording ? (
+                            <RecordingInterface onTranscribed={handleTranscribed} />
                         ) : (
-                            <ArrowUp className="h-4 w-4" />
+                            <>
+                                {/* Textarea */}
+                                <ChatTextarea
+                                    textareaRef={textareaRef}
+                                    value={value}
+                                    lineHeight={lineHeight}
+                                    onInput={handleInput}
+                                    disabled={disabled}
+                                    placeholder={placeholder || "Ask MediSync AI anything..."}
+                                />
+
+                                {/* Action bar */}
+                                <div className="flex items-center justify-between w-full">
+                                    {/* Left: file attach */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={handleFileSelect}
+                                            className={cn(
+                                                "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                                                "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                            )}
+                                            title="Attach files"
+                                            disabled={disabled}
+                                        >
+                                            <Paperclip className="h-4 w-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* Right: mic + send */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            className={cn(
+                                                "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                                                "text-muted-foreground hover:text-foreground"
+                                            )}
+                                            title="Voice input"
+                                            disabled={disabled}
+                                        >
+                                            <MicButton />
+                                        </button>
+
+                                        <button
+                                            onClick={disabled ? onStop : handleSend}
+                                            disabled={!disabled && !value.trim() && !hasFiles}
+                                            className={cn(
+                                                "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                                                disabled
+                                                    ? "bg-destructive text-destructive-foreground hover:opacity-90"
+                                                    : ( value.trim() || hasFiles )
+                                                        ? "bg-primary text-primary-foreground hover:opacity-90"
+                                                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                                            )}
+                                            title={disabled ? "Stop" : "Send message"}
+                                        >
+                                            {disabled ? (
+                                                <Square className="h-3 w-3 fill-current" />
+                                            ) : (
+                                                <ArrowUp className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
                         )}
-                    </button>
+                    </div>
                 </div>
 
                 <p className="mt-1.5 text-center text-[10px] text-muted-foreground">

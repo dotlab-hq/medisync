@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Plus, Trash2, MessageSquare, PanelLeftClose, PanelLeft } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Plus, Trash2, MessageSquare, PanelLeftClose, PanelLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "./chat-store";
 
@@ -17,6 +18,9 @@ type ChatSidebarProps = {
     onNew: () => void;
     onSelect: ( id: string ) => void;
     onDelete: ( id: string ) => void;
+    onLoadMore?: () => void;
+    loadingMore?: boolean;
+    hasMore?: boolean;
 };
 
 export default function ChatSidebar( {
@@ -25,9 +29,34 @@ export default function ChatSidebar( {
     onNew,
     onSelect,
     onDelete,
+    onLoadMore,
+    loadingMore = false,
+    hasMore = false,
 }: ChatSidebarProps ) {
     const { activeConversationId, sidebarOpen, toggleSidebar } = useChatStore();
     const [hoveredId, setHoveredId] = useState<string | null>( null );
+    const scrollContainerRef = useRef<HTMLDivElement>( null );
+    const loadMoreTriggerRef = useRef<HTMLDivElement>( null );
+
+    // Infinite scroll observer
+    useEffect( () => {
+        if ( !onLoadMore || !hasMore || loadingMore ) return;
+
+        const observer = new IntersectionObserver(
+            ( entries ) => {
+                if ( entries[0].isIntersecting ) {
+                    onLoadMore();
+                }
+            },
+            { threshold: 0.1 },
+        );
+
+        if ( loadMoreTriggerRef.current ) {
+            observer.observe( loadMoreTriggerRef.current );
+        }
+
+        return () => observer.disconnect();
+    }, [onLoadMore, hasMore, loadingMore] );
 
     return (
         <div
@@ -61,48 +90,71 @@ export default function ChatSidebar( {
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
-                {isLoading ? (
-                    Array.from( { length: 5 } ).map( ( _, i ) => (
-                        <Skeleton key={i} className="h-9 w-full rounded-md" />
-                    ) )
-                ) : conversations.length === 0 ? (
-                    <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-                        No conversations yet
-                    </p>
-                ) : (
-                    conversations.map( ( c ) => (
-                        <div
-                            key={c.id}
-                            className={cn(
-                                "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors",
-                                "hover:bg-primary/10",
-                                activeConversationId === c.id &&
-                                "bg-primary/10 font-medium text-primary",
-                            )}
-                            onClick={() => onSelect( c.id )}
-                            onMouseEnter={() => setHoveredId( c.id )}
-                            onMouseLeave={() => setHoveredId( null )}
-                        >
-                            <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                            <span className="flex-1 truncate">{c.title}</span>
-                            {hoveredId === c.id && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100"
-                                    onClick={( e ) => {
-                                        e.stopPropagation();
-                                        onDelete( c.id );
-                                    }}
+            <ScrollArea className="flex-1">
+                <div
+                    ref={scrollContainerRef}
+                    className="px-2 py-2 space-y-0.5"
+                >
+                    {isLoading ? (
+                        Array.from( { length: 5 } ).map( ( _, i ) => (
+                            <Skeleton key={i} className="h-9 w-full rounded-md" />
+                        ) )
+                    ) : conversations.length === 0 ? (
+                        <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+                            No conversations yet
+                        </p>
+                    ) : (
+                        <>
+                            {conversations.map( ( c ) => (
+                                <div
+                                    key={c.id}
+                                    className={cn(
+                                        "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors",
+                                        "hover:bg-primary/10",
+                                        activeConversationId === c.id &&
+                                        "bg-primary/10 font-medium text-primary",
+                                    )}
+                                    onClick={() => onSelect( c.id )}
+                                    onMouseEnter={() => setHoveredId( c.id )}
+                                    onMouseLeave={() => setHoveredId( null )}
                                 >
-                                    <Trash2 className="h-3 w-3 text-destructive" />
-                                </Button>
+                                    <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <span className="flex-1 truncate">{c.title}</span>
+                                    {hoveredId === c.id && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100"
+                                            onClick={( e ) => {
+                                                e.stopPropagation();
+                                                onDelete( c.id );
+                                            }}
+                                        >
+                                            <Trash2 className="h-3 w-3 text-destructive" />
+                                        </Button>
+                                    )}
+                                </div>
+                            ) )}
+
+                            {/* Load More Trigger */}
+                            {hasMore && (
+                                <div ref={loadMoreTriggerRef} className="py-2 text-center">
+                                    {loadingMore ? (
+                                        <Loader2 className="h-4 w-4 animate-spin mx-auto text-muted-foreground" />
+                                    ) : null}
+                                </div>
                             )}
-                        </div>
-                    ) )
-                )}
-            </div>
+
+                            {/* End of List */}
+                            {!hasMore && conversations.length > 0 && (
+                                <p className="px-3 py-2 text-center text-xs text-muted-foreground">
+                                    No more chats
+                                </p>
+                            )}
+                        </>
+                    )}
+                </div>
+            </ScrollArea>
         </div>
     );
 }

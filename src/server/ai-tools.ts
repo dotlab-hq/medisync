@@ -1,12 +1,11 @@
 import { toolDefinition } from "@tanstack/ai";
-import { z } from "zod/v4";
 import { db } from "@/db";
 import { documentFile } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-// ── S3 client (same pattern as documents.ts) ─────────────────────────
+// -- S3 client (same pattern as documents.ts) --
 function getS3Client() {
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
     const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
@@ -22,23 +21,34 @@ function getS3Client() {
     } );
 }
 
-// ── Tool definition: get_user_file ───────────────────────────────────
+// -- Tool definition: get_user_file --
 export const getUserFileDef = toolDefinition( {
     name: "get_user_file",
     description:
         "Retrieve a presigned URL for one of the user's uploaded documents. " +
         "Use this when the user mentions or asks about a specific file.",
-    inputSchema: z.object( {
-        fileId: z.string().meta( {
-            description: "The ID of the document file to retrieve",
-        } ),
-    } ),
-    outputSchema: z.object( {
-        fileName: z.string(),
-        fileType: z.string(),
-        url: z.string(),
-        description: z.string().nullable(),
-    } ),
+    inputSchema: {
+        type: "object",
+        properties: {
+            fileId: {
+                type: "string",
+                description: "The ID of the document file to retrieve",
+            },
+        },
+        required: ["fileId"],
+        additionalProperties: false,
+    },
+    outputSchema: {
+        type: "object",
+        properties: {
+            fileName: { type: "string" },
+            fileType: { type: "string" },
+            url: { type: "string" },
+            description: { type: ["string", "null"] },
+        },
+        required: ["fileName", "fileType", "url", "description"],
+        additionalProperties: false,
+    },
 } );
 
 /**
@@ -77,23 +87,39 @@ export function createGetUserFileTool( userId: string ) {
     } );
 }
 
-// ── Tool definition: list_user_files ─────────────────────────────────
+// -- Tool definition: list_user_files --
 export const listUserFilesDef = toolDefinition( {
     name: "list_user_files",
     description:
         "List the user's uploaded document files so they can select one. " +
         "Use when the user says 'my files' or wants to browse documents.",
-    inputSchema: z.object( {} ),
-    outputSchema: z.object( {
-        files: z.array(
-            z.object( {
-                id: z.string(),
-                fileName: z.string(),
-                fileType: z.string(),
-                description: z.string().nullable(),
-            } ),
-        ),
-    } ),
+    inputSchema: {
+        type: "object",
+        properties: {},
+        required: [],
+        additionalProperties: false,
+    },
+    outputSchema: {
+        type: "object",
+        properties: {
+            files: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string" },
+                        fileName: { type: "string" },
+                        fileType: { type: "string" },
+                        description: { type: ["string", "null"] },
+                    },
+                    required: ["id", "fileName", "fileType", "description"],
+                    additionalProperties: false,
+                },
+            },
+        },
+        required: ["files"],
+        additionalProperties: false,
+    },
 } );
 
 export function createListUserFilesTool( userId: string ) {

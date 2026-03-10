@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { db } from "@/db";
 import { documentFolder, documentFile, userStorage } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getRequest } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/start-server-core";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 

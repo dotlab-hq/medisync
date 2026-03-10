@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { db } from "@/db";
 import {
     user,
@@ -9,7 +9,7 @@ import {
 } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getRequest } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/start-server-core";
 
 // ── Get or create QR code ────────────────────────────────────────────
 export const getOrCreateQrCode = createServerFn( { method: "GET" } ).handler(

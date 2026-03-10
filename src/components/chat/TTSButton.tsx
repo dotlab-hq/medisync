@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
 import { Volume2, VolumeX, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Tooltip,
@@ -7,57 +7,91 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { generateMessageAudio } from "@/server/audio";
+import { toast } from "sonner";
 
 type TTSButtonProps = {
+    messageId: string;
     text: string;
 };
 
-export default function TTSButton( { text }: TTSButtonProps ) {
-    const [playing, setPlaying] = useState( false );
-    const [loading, setLoading] = useState( false );
-    const [audio, setAudio] = useState<HTMLAudioElement | null>( null );
+export default function TTSButton( { messageId, text }: TTSButtonProps ) {
+    const [isPlaying, setIsPlaying] = useState( false );
+    const [isLoading, setIsLoading] = useState( false );
+    const [audioUrl, setAudioUrl] = useState<string | null>( null );
+    const audioRef = useRef<HTMLAudioElement | null>( null );
 
-    const handlePlay = useCallback( async () => {
-        if ( playing && audio ) {
-            audio.pause();
-            audio.currentTime = 0;
-            setPlaying( false );
-            return;
-        }
+    useEffect( () => {
+        // Cleanup audio on unmount
+        return () => {
+            if ( audioRef.current ) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, [] );
 
-        if ( !text.trim() ) return;
-
-        setLoading( true );
+    const handlePlay = async () => {
         try {
-            const response = await fetch( "/api/chat/tts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify( { text: text.slice( 0, 4096 ) } ),
-            } );
-
-            if ( !response.ok ) {
-                throw new Error( "TTS request failed" );
+            // If we already have the audio URL, just play it
+            if ( audioUrl ) {
+                playAudio( audioUrl );
+                return;
             }
 
-            const blob = await response.blob();
-            const url = URL.createObjectURL( blob );
-            const newAudio = new Audio( url );
+            // Generate or fetch cached audio
+            setIsLoading( true );
+            const result = await generateMessageAudio( {
+                data: { messageId, content: text },
+            } );
 
-            newAudio.onended = () => {
-                setPlaying( false );
-                URL.revokeObjectURL( url );
-            };
+            if ( result.audioUrl ) {
+                setAudioUrl( result.audioUrl );
+                playAudio( result.audioUrl );
 
-            setAudio( newAudio );
-            setPlaying( true );
-            await newAudio.play();
-        } catch ( err ) {
-            console.error( "TTS error:", err );
-            setPlaying( false );
+                if ( result.cached ) {
+                    toast.success( "Playing cached audio" );
+                }
+            }
+        } catch ( error ) {
+            console.error( "Error playing audio:", error );
+            toast.error( "Failed to generate audio" );
         } finally {
-            setLoading( false );
+            setIsLoading( false );
         }
-    }, [text, playing, audio] );
+    };
+
+    const playAudio = ( url: string ) => {
+        if ( audioRef.current ) {
+            audioRef.current.pause();
+        }
+
+        const audio = new Audio( url );
+        audioRef.current = audio;
+
+        audio.onplay = () => setIsPlaying( true );
+        audio.onended = () => setIsPlaying( false );
+        audio.onerror = () => {
+            setIsPlaying( false );
+            toast.error( "Failed to play audio" );
+        };
+
+        audio.play().catch( ( error ) => {
+            console.error( "Error playing audio:", error );
+            setIsPlaying( false );
+            toast.error( "Failed to play audio" );
+        } );
+    };
+
+    const handleStop = () => {
+        if ( audioRef.current ) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            setIsPlaying( false );
+        }
+    };
+
+    if ( !text.trim() ) return null;
 
     return (
         <TooltipProvider>
@@ -67,12 +101,12 @@ export default function TTSButton( { text }: TTSButtonProps ) {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
-                        onClick={handlePlay}
-                        disabled={loading || !text.trim()}
+                        onClick={isPlaying ? handleStop : handlePlay}
+                        disabled={isLoading}
                     >
-                        {loading ? (
+                        {isLoading ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : playing ? (
+                        ) : isPlaying ? (
                             <VolumeX className="h-3 w-3" />
                         ) : (
                             <Volume2 className="h-3 w-3" />
@@ -80,7 +114,7 @@ export default function TTSButton( { text }: TTSButtonProps ) {
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>{playing ? "Stop" : "Read aloud"}</p>
+                    <p>{isPlaying ? "Stop" : "Read aloud"}</p>
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>

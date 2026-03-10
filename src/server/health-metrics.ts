@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { db } from "@/db";
 import { healthMetric } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getRequest } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/start-server-core";
 
 // ── List health metrics ──────────────────────────────────────────────
 export const listHealthMetrics = createServerFn( { method: "GET" } ).handler(

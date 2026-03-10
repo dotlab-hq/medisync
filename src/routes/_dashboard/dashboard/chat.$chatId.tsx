@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useCallback, useEffect, lazy, Suspense } from "react";
-import { ChatSidebarToggle } from "@/components/chat/ChatSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChatStore } from "@/components/chat/chat-store";
+import { ChatSidebarToggle } from "@/components/chat/ChatSidebar";
 import {
     listConversations,
     deleteConversation,
@@ -17,11 +17,12 @@ type ConversationItem = {
     updatedAt: Date | string;
 };
 
-export const Route = createFileRoute( "/_dashboard/dashboard/chat" )( {
-    component: ChatPage,
+export const Route = createFileRoute( "/_dashboard/dashboard/chat/$chatId" )( {
+    component: ChatDetailPage,
 } );
 
-function ChatPage() {
+function ChatDetailPage() {
+    const { chatId } = Route.useParams();
     const navigate = useNavigate();
     const [conversations, setConversations] = useState<ConversationItem[]>( [] );
     const [loading, setLoading] = useState( true );
@@ -30,14 +31,19 @@ function ChatPage() {
     const [nextCursor, setNextCursor] = useState<string | null>( null );
     const { activeConversationId, setActiveConversation } = useChatStore();
 
-    // Load conversations on mount — use functional update so any optimistic additions
-    // made before the fetch resolves are preserved at the top of the list.
+    // Set active conversation from URL on mount
+    useEffect( () => {
+        if ( chatId && chatId !== activeConversationId ) {
+            setActiveConversation( chatId );
+        }
+    }, [chatId, activeConversationId, setActiveConversation] );
+
+    // Load conversations on mount
     useEffect( () => {
         listConversations( { data: { limit: 10 } } )
             .then( ( result ) => {
                 setConversations( ( prev ) => {
                     const serverIds = new Set( result.items.map( ( c ) => c.id ) );
-                    // Keep any optimistically-added items not yet returned by the server
                     const optimistic = prev.filter( ( c ) => !serverIds.has( c.id ) );
                     return [...optimistic, ...result.items];
                 } );
@@ -65,8 +71,6 @@ function ChatPage() {
     }, [hasMore, loadingMore, nextCursor] );
 
     const handleNew = useCallback( () => {
-        // Clear active conversation and navigate to empty chat.
-        // Conversation is created atomically on first message send (in ChatContainer).
         setActiveConversation( null );
         navigate( { to: "/dashboard/chat" } );
     }, [setActiveConversation, navigate] );
@@ -85,25 +89,25 @@ function ChatPage() {
             setConversations( ( prev ) => prev.filter( ( c ) => c.id !== id ) );
             if ( activeConversationId === id ) {
                 setActiveConversation( null );
+                navigate( { to: "/dashboard/chat" } );
             }
         },
-        [activeConversationId, setActiveConversation],
+        [activeConversationId, setActiveConversation, navigate],
     );
 
     const handleConversationCreated = useCallback(
         ( conv: { id: string; title: string; updatedAt: Date } ) => {
-            // Optimistically prepend at top — no async refresh needed
             setConversations( ( prev ) => [
                 conv,
                 ...prev.filter( ( c ) => c.id !== conv.id ),
             ] );
+            navigate( { to: "/dashboard/chat/$chatId", params: { chatId: conv.id } } );
         },
-        [],
+        [navigate],
     );
 
     const handleTitleUpdated = useCallback(
         ( id: string, title: string ) => {
-            // Promote the updated conversation to the top of the list
             setConversations( ( prev ) => {
                 const conv = prev.find( ( c ) => c.id === id );
                 if ( !conv ) return prev;

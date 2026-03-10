@@ -3,15 +3,6 @@ import MessageBubble from "./MessageBubble";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bot } from "lucide-react";
 
-type MessagePart = {
-    type: string;
-    content?: string;
-    text?: string;
-    name?: string;
-    input?: Record<string, unknown>;
-    output?: Record<string, unknown>;
-};
-
 type Attachment = {
     name: string;
     type: string;
@@ -22,7 +13,14 @@ type Attachment = {
 type UIMessage = {
     id: string;
     role: "user" | "assistant" | "system";
-    parts: MessagePart[];
+    parts: Array<{
+        type: string;
+        content?: string;
+        text?: string;
+        name?: string;
+        input?: Record<string, unknown>;
+        output?: Record<string, unknown>;
+    }>;
     reasoning?: string | null;
     attachments?: Attachment[] | null;
     inputTokens?: number | null;
@@ -34,64 +32,6 @@ type ChatMessagesProps = {
     messages: UIMessage[];
     isLoading: boolean;
 };
-
-function renderParts( parts: MessagePart[] ) {
-    return parts.map( ( part, idx ) => {
-        if ( part.type === "thinking" ) {
-            return (
-                <div key={idx} className="text-xs italic text-muted-foreground mb-1">
-                    💭 {part.content}
-                </div>
-            );
-        }
-        if ( part.type === "text" ) {
-            return <span key={idx}>{part.content ?? part.text}</span>;
-        }
-        if ( part.type === "tool-call" ) {
-            return (
-                <div
-                    key={idx}
-                    className="my-1 rounded-md border border-border/50 bg-background/50 px-3 py-2 text-xs"
-                >
-                    <span className="font-mono text-muted-foreground">
-                        🔧 {part.name}
-                    </span>
-                    {part.output && (
-                        <div className="mt-1">
-                            {renderToolOutput( part.output )}
-                        </div>
-                    )}
-                </div>
-            );
-        }
-        return null;
-    } );
-}
-
-function renderToolOutput( output: Record<string, unknown> ) {
-    if ( "url" in output && "fileName" in output ) {
-        return (
-            <a
-                href={output.url as string}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline"
-            >
-                📎 {output.fileName as string}
-            </a>
-        );
-    }
-    if ( "files" in output && Array.isArray( output.files ) ) {
-        return (
-            <ul className="list-inside list-disc space-y-0.5">
-                {( output.files as Array<{ id: string; fileName: string }> ).map( ( f ) => (
-                    <li key={f.id}>{f.fileName}</li>
-                ) )}
-            </ul>
-        );
-    }
-    return <pre className="whitespace-pre-wrap">{JSON.stringify( output, null, 2 )}</pre>;
-}
 
 export default function ChatMessages( { messages, isLoading }: ChatMessagesProps ) {
     const bottomRef = useRef<HTMLDivElement>( null );
@@ -109,19 +49,27 @@ export default function ChatMessages( { messages, isLoading }: ChatMessagesProps
                 </div>
             )}
 
-            {messages.map( ( msg ) => (
-                <MessageBubble
-                    key={msg.id}
-                    role={msg.role}
-                    reasoning={msg.reasoning}
-                    attachments={msg.attachments}
-                    inputTokens={msg.inputTokens}
-                    outputTokens={msg.outputTokens}
-                    modelUsed={msg.modelUsed}
-                >
-                    {renderParts( msg.parts )}
-                </MessageBubble>
-            ) )}
+            {messages.map( ( msg, index ) => {
+                // Only hide actions for the last assistant message if still streaming
+                const isLastAssistantMsg = msg.role === "assistant" &&
+                    index === messages.length - 1 &&
+                    isLoading;
+
+                return (
+                    <MessageBubble
+                        key={msg.id}
+                        messageId={msg.id}
+                        role={msg.role}
+                        reasoning={msg.reasoning}
+                        attachments={msg.attachments}
+                        inputTokens={msg.inputTokens}
+                        outputTokens={msg.outputTokens}
+                        modelUsed={msg.modelUsed}
+                        parts={msg.parts}
+                        isStreaming={isLastAssistantMsg}
+                    />
+                );
+            } )}
 
             {isLoading && (
                 <div className="flex gap-3 px-4 py-3">

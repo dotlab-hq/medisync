@@ -1,1 +1,0 @@
-ALTER TABLE "medisync"."document_file" DROP COLUMN "s3_url";

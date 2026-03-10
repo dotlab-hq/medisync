@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { db } from "@/db";
 import { chatConversation, chatMessage } from "@/db/schema";
-import { eq, and, desc, asc } from "drizzle-orm";
+import { eq, and, desc, asc, lt } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getRequest } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/start-server-core";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const getSession = async () => {
@@ -27,6 +27,11 @@ const verifyOwnership = async ( conversationId: string, userId: string ) => {
 
 // ── Schemas ──────────────────────────────────────────────────────────
 const idSchema = z.object( { id: z.string().min( 1 ) } );
+
+const listConversationsSchema = z.object( {
+    limit: z.number().int().positive().optional().default( 10 ),
+    cursor: z.string().optional(),
+} );
 
 const renameSchema = z.object( {
     id: z.string().min( 1 ),
@@ -56,16 +61,30 @@ const createAndSendSchema = z.object( {
     attachments: z.array( z.record( z.unknown() ) ).nullish(),
 } );
 
-// ── List conversations ───────────────────────────────────────────────
-export const listConversations = createServerFn( { method: "GET" } ).handler(
-    async () => {
+// ── List conversations (with pagination) ─────────────────────────────
+export const listConversations = createServerFn( { method: "GET" } )
+    .inputValidator( ( data: unknown ) => listConversationsSchema.parse( data ) )
+    .handler( async ( { data } ) => {
         const session = await getSession();
-        return db.query.chatConversation.findMany( {
-            where: eq( chatConversation.userId, session.user.id ),
+        const limit = data.limit || 10;
+
+        const whereConditions = [eq( chatConversation.userId, session.user.id )];
+        if ( data.cursor ) {
+            whereConditions.push( lt( chatConversation.id, data.cursor ) );
+        }
+
+        const conversations = await db.query.chatConversation.findMany( {
+            where: and( ...whereConditions ),
             orderBy: desc( chatConversation.updatedAt ),
+            limit: limit + 1, // Fetch one extra to determine if there are more
         } );
-    },
-);
+
+        const hasMore = conversations.length > limit;
+        const items = hasMore ? conversations.slice( 0, limit ) : conversations;
+        const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+        return { items, nextCursor, hasMore };
+    } );
 
 // ── Create conversation ──────────────────────────────────────────────
 export const createConversation = createServerFn( { method: "POST" } ).handler(

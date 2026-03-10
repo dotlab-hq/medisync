@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { db } from "@/db";
 import { user } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { getRequest } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/start-server-core";
 import { generateOtp, verifyOtp } from "@/lib/otp";
 
 // ── Step 1: Send OTP to a new phone number ────────────────────────────
