@@ -31,6 +31,8 @@ const createAppointmentSchema = z.object( {
     time: z.string().min( 1 ),
     notes: z.string().optional(),
     contactNumber: z.string().optional(),
+    // Browser timezone passed from client; falls back to user profile timezone
+    timezone: z.string().optional(),
 } );
 
 export const createAppointment = createServerFn( { method: "POST" } )
@@ -41,15 +43,20 @@ export const createAppointment = createServerFn( { method: "POST" } )
         if ( !sessionData?.user?.id ) throw new Error( "Unauthorized" );
         const userId = sessionData.user.id;
 
-        const userRecord = await db.query.user.findFirst( {
-            where: eq( user.id, userId ),
-            columns: { timezone: true },
-        } );
-        const timezone = userRecord?.timezone ?? "UTC";
+        // Prefer timezone from client (browser-detected); fall back to profile timezone
+        let timezone = data.timezone;
+        if ( !timezone ) {
+            const userRecord = await db.query.user.findFirst( {
+                where: eq( user.id, userId ),
+                columns: { timezone: true },
+            } );
+            timezone = userRecord?.timezone ?? "UTC";
+        }
 
+        const { timezone: _tz, ...rest } = data;
         const [created] = await db
             .insert( appointment )
-            .values( { ...data, userId, timezone } )
+            .values( { ...rest, userId, timezone } )
             .returning();
         return created;
     } );

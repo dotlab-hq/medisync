@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,7 @@ const reminderSchema = z.object( {
     type: z.string().min( 1 ),
     date: z.string().min( 1, "Date is required" ),
     time: z.string().min( 1, "Time is required" ),
+    timezone: z.string().min( 1 ),
 } );
 
 export type ReminderFormValues = z.infer<typeof reminderSchema>;
@@ -44,8 +46,14 @@ export function ReminderForm( { isPending, onSubmit }: ReminderFormProps ) {
             type: "medication",
             date: "",
             time: "",
+            timezone: "UTC",
         },
     } );
+
+    // Auto-detect the user's browser timezone so stored reminders fire correctly
+    useEffect( () => {
+        form.setValue( "timezone", Intl.DateTimeFormat().resolvedOptions().timeZone );
+    }, [] );
 
     return (
         <Form {...form}>

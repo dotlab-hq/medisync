@@ -54,7 +54,7 @@ LEFT JOIN "medisync"."user_notification_settings" ns
     ON ns.user_id = r.user_id
 WHERE r.is_completed = false
   AND (r.date || ' ' || r.time)::timestamp AT TIME ZONE r.timezone
-      BETWEEN (NOW() - INTERVAL '5 minutes') AND NOW()
+      BETWEEN (NOW() - INTERVAL '5 minutes') AND (NOW() + INTERVAL '1 minute')
   -- at least one enabled channel that hasn't been sent yet
   AND (
       (
@@ -123,7 +123,7 @@ LEFT JOIN "medisync"."user_notification_settings" ns
     ON ns.user_id = a.user_id
 WHERE a.status = 'upcoming'
   AND (a.date || ' ' || a.time)::timestamp AT TIME ZONE a.timezone
-      BETWEEN (NOW() - INTERVAL '5 minutes') AND NOW()
+      BETWEEN (NOW() - INTERVAL '5 minutes') AND (NOW() + INTERVAL '1 minute')
   AND (
       (
           COALESCE(ns.email_enabled, true) = true

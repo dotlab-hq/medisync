@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +23,7 @@ const appointmentSchema = z.object( {
     time: z.string().min( 1, "Time is required" ),
     contactNumber: z.string().optional(),
     notes: z.string().optional(),
+    timezone: z.string().min( 1 ),
 } );
 
 export type AppointmentFormValues = z.infer<typeof appointmentSchema>;
@@ -43,8 +45,14 @@ export function AppointmentForm( { isPending, onSubmit }: AppointmentFormProps )
             time: "",
             contactNumber: "",
             notes: "",
+            timezone: "UTC",
         },
     } );
+
+    // Auto-detect the user's browser timezone so stored appointments fire correctly
+    useEffect( () => {
+        form.setValue( "timezone", Intl.DateTimeFormat().resolvedOptions().timeZone );
+    }, [] );
 
     return (
         <Form {...form}>
