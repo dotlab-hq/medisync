@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { appointment, user } from '@/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
-import { getRequest } from '@tanstack/react-start/server'
+import { getRequest } from '@tanstack/start-server-core'
 import { toUtcDate } from '@/lib/to-utc'
 
 // ── List appointments ────────────────────────────────────────────────

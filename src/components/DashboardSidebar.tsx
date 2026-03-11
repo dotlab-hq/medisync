@@ -1,4 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Home,
   FileText,
@@ -64,13 +65,13 @@ function getAccountNav(): NavItem[] {
   ]
 }
 
-function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+function NavItems( { onNavigate }: { onNavigate?: () => void } ) {
   const location = useLocation()
   const pathname = location.pathname
 
   return (
     <div className="flex flex-col gap-1 px-3">
-      {getMainNav().map(({ label, icon: Icon, path }) => (
+      {getMainNav().map( ( { label, icon: Icon, path } ) => (
         <Link
           key={path}
           to={path}
@@ -84,14 +85,14 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
           <Icon className="h-4 w-4" />
           {label}
         </Link>
-      ))}
+      ) )}
 
       <Separator className="my-2" />
       <p className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Account
       </p>
 
-      {getAccountNav().map(({ label, icon: Icon, path }) => (
+      {getAccountNav().map( ( { label, icon: Icon, path } ) => (
         <Link
           key={path}
           to={path}
@@ -105,21 +106,21 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
           <Icon className="h-4 w-4" />
           {label}
         </Link>
-      ))}
+      ) )}
     </div>
   )
 }
 
 export default function DashboardSidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState( false )
+  const [isMobile, setIsMobile] = useState( false )
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 1024)
+  useEffect( () => {
+    const check = () => setIsMobile( window.innerWidth < 1024 )
     check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+    window.addEventListener( 'resize', check )
+    return () => window.removeEventListener( 'resize', check )
+  }, [] )
 
   const handleLogout = async () => {
     await authClient.signOut()
@@ -137,9 +138,11 @@ export default function DashboardSidebar() {
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4">
-        <NavItems onNavigate={() => setMobileOpen(false)} />
-      </nav>
+      <ScrollArea className="flex-1">
+        <nav className="py-4">
+          <NavItems onNavigate={() => setMobileOpen( false )} />
+        </nav>
+      </ScrollArea>
 
       <div className="border-t border-border/50 p-3">
         <Button

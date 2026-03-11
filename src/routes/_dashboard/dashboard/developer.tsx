@@ -11,15 +11,17 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Key } from 'lucide-react'
 
-export const Route = createFileRoute('/_dashboard/dashboard/developer')({
+export const Route = createFileRoute( '/_dashboard/dashboard/developer' )( {
   component: DeveloperPage,
-})
+} )
 
 function DeveloperPage() {
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery( {
     queryKey: ['userProfile'],
     queryFn: () => getUserProfile(),
-  })
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
 
   return (
     <div className="space-y-6">
@@ -68,7 +70,7 @@ function DeveloperPage() {
             <span className="text-sm text-muted-foreground">Created</span>
             <span className="text-sm">
               {profile?.createdAt
-                ? new Date(profile.createdAt).toLocaleString()
+                ? new Date( profile.createdAt ).toLocaleString()
                 : '—'}
             </span>
           </div>

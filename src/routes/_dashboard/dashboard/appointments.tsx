@@ -43,9 +43,9 @@ import { AppointmentForm } from '@/components/dashboard/AppointmentForm'
 import type { AppointmentFormValues } from '@/components/dashboard/AppointmentForm'
 import { formatLocalDateTime } from '@/lib/format-datetime'
 
-export const Route = createFileRoute('/_dashboard/dashboard/appointments')({
+export const Route = createFileRoute( '/_dashboard/dashboard/appointments' )( {
   component: AppointmentsPage,
-})
+} )
 
 type StatusFilter = 'all' | 'upcoming' | 'completed' | 'cancelled'
 
@@ -70,34 +70,36 @@ const STATUS_CONFIG = {
 
 function AppointmentsPage() {
   const queryClient = useQueryClient()
-  const [open, setOpen] = useState(false)
-  const [filter, setFilter] = useState<StatusFilter>('all')
+  const [open, setOpen] = useState( false )
+  const [filter, setFilter] = useState<StatusFilter>( 'all' )
 
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments = [], isLoading } = useQuery( {
     queryKey: ['appointments'],
     queryFn: () => listAppointments(),
-  })
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
 
-  const createMut = useMutation({
+  const createMut = useMutation( {
     mutationFn: createAppointment,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      setOpen(false)
+      queryClient.invalidateQueries( { queryKey: ['appointments'] } )
+      setOpen( false )
     },
-  })
-  const updateMut = useMutation({
+  } )
+  const updateMut = useMutation( {
     mutationFn: updateAppointment,
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['appointments'] }),
-  })
-  const deleteMut = useMutation({
+      queryClient.invalidateQueries( { queryKey: ['appointments'] } ),
+  } )
+  const deleteMut = useMutation( {
     mutationFn: deleteAppointment,
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['appointments'] }),
-  })
+      queryClient.invalidateQueries( { queryKey: ['appointments'] } ),
+  } )
 
-  const handleCreate = (values: AppointmentFormValues) => {
-    createMut.mutate({
+  const handleCreate = ( values: AppointmentFormValues ) => {
+    createMut.mutate( {
       data: {
         ...values,
         specialty: values.specialty || undefined,
@@ -105,18 +107,18 @@ function AppointmentsPage() {
         notes: values.notes || undefined,
         contactNumber: values.contactNumber || undefined,
       },
-    })
+    } )
   }
 
   const filtered =
     filter === 'all'
       ? appointments
-      : appointments.filter((a) => a.status === filter)
+      : appointments.filter( ( a ) => a.status === filter )
   const counts = {
     all: appointments.length,
-    upcoming: appointments.filter((a) => a.status === 'upcoming').length,
-    completed: appointments.filter((a) => a.status === 'completed').length,
-    cancelled: appointments.filter((a) => a.status === 'cancelled').length,
+    upcoming: appointments.filter( ( a ) => a.status === 'upcoming' ).length,
+    completed: appointments.filter( ( a ) => a.status === 'completed' ).length,
+    cancelled: appointments.filter( ( a ) => a.status === 'cancelled' ).length,
   }
 
   return (
@@ -146,24 +148,24 @@ function AppointmentsPage() {
         </Dialog>
       </div>
 
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
+      <Tabs value={filter} onValueChange={( v ) => setFilter( v as StatusFilter )}>
         <TabsList className="h-9">
           {(
             ['all', 'upcoming', 'completed', 'cancelled'] as StatusFilter[]
-          ).map((s) => (
+          ).map( ( s ) => (
             <TabsTrigger key={s} value={s} className="text-xs capitalize px-3">
               {s === 'all' ? 'All' : STATUS_CONFIG[s].label}
               <span className="ml-1 opacity-55">({counts[s]})</span>
             </TabsTrigger>
-          ))}
+          ) )}
         </TabsList>
       </Tabs>
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map( ( i ) => (
             <Skeleton key={i} className="h-24 w-full rounded-lg" />
-          ))}
+          ) )}
         </div>
       ) : filtered.length === 0 ? (
         <Card>
@@ -176,7 +178,7 @@ function AppointmentsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map((appt) => {
+          {filtered.map( ( appt ) => {
             const cfg =
               STATUS_CONFIG[appt.status as keyof typeof STATUS_CONFIG] ??
               STATUS_CONFIG.upcoming
@@ -198,17 +200,17 @@ function AppointmentsPage() {
                         {cfg.label}
                       </span>
                     </div>
-                    {(appt.specialty || appt.hospital) && (
+                    {( appt.specialty || appt.hospital ) && (
                       <p className="text-xs text-muted-foreground pl-6">
                         {[appt.specialty, appt.hospital]
-                          .filter(Boolean)
-                          .join(' · ')}
+                          .filter( Boolean )
+                          .join( ' · ' )}
                       </p>
                     )}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 pt-0.5 pl-6">
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
-                        {formatLocalDateTime(appt.date, appt.time)}
+                        {formatLocalDateTime( appt.date, appt.time )}
                       </span>
                       {appt.contactNumber && (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -238,9 +240,9 @@ function AppointmentsPage() {
                           className="h-8 w-8"
                           title="Mark Completed"
                           onClick={() =>
-                            updateMut.mutate({
+                            updateMut.mutate( {
                               data: { id: appt.id, status: 'completed' },
-                            })
+                            } )
                           }
                         >
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -251,9 +253,9 @@ function AppointmentsPage() {
                           className="h-8 w-8"
                           title="Cancel"
                           onClick={() =>
-                            updateMut.mutate({
+                            updateMut.mutate( {
                               data: { id: appt.id, status: 'cancelled' },
-                            })
+                            } )
                           }
                         >
                           <XCircle className="h-4 w-4 text-amber-500" />
@@ -279,7 +281,7 @@ function AppointmentsPage() {
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() =>
-                              deleteMut.mutate({ data: { id: appt.id } })
+                              deleteMut.mutate( { data: { id: appt.id } } )
                             }
                           >
                             Delete
@@ -291,7 +293,7 @@ function AppointmentsPage() {
                 </div>
               </div>
             )
-          })}
+          } )}
         </div>
       )}
     </div>

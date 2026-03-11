@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ThumbsUp, ThumbsDown, Volume2, Copy, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { setMessageFeedback } from '@/server/chat'
 
 type MessageActionsProps = {
   messageId?: string
@@ -9,19 +10,39 @@ type MessageActionsProps = {
 }
 
 export default function MessageActions({
-  messageId: _messageId,
+  messageId,
   content,
 }: MessageActionsProps) {
   const [liked, setLiked] = useState<boolean | null>(null)
   const [copied, setCopied] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
 
-  const handleLike = () => {
-    setLiked(liked === true ? null : true)
+  const handleLike = async () => {
+    if (!messageId) return
+    const next = liked === true ? null : true
+    setLiked(next)
+    try {
+      await setMessageFeedback({
+        data: { messageId, feedback: next ? 'LIKED' : null },
+      })
+    } catch (err) {
+      setLiked(liked)
+      console.error('Failed to save like feedback:', err)
+    }
   }
 
-  const handleDislike = () => {
-    setLiked(liked === false ? null : false)
+  const handleDislike = async () => {
+    if (!messageId) return
+    const next = liked === false ? null : false
+    setLiked(next)
+    try {
+      await setMessageFeedback({
+        data: { messageId, feedback: next === false ? 'DISLIKED' : null },
+      })
+    } catch (err) {
+      setLiked(liked)
+      console.error('Failed to save dislike feedback:', err)
+    }
   }
 
   const handleCopy = async () => {

@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { chatConversation, chatMessage } from '@/db/schema'
 import { eq, and, desc, asc, lt } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
-import { getRequest } from '@tanstack/react-start/server'
+import { getRequest } from '@tanstack/start-server-core'
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const getSession = async () => {
@@ -36,6 +36,11 @@ const listConversationsSchema = z.object({
 const renameSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
+})
+
+const setMessageFeedbackSchema = z.object({
+  messageId: z.string().min(1),
+  feedback: z.enum(['LIKED', 'DISLIKED']).nullable(),
 })
 
 const messageSchema = z.object({
@@ -134,7 +139,7 @@ export const saveMessages = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const session = await getSession()
     await verifyOwnership(data.conversationId, session.user.id)
-    if (data.messages.length === 0) return { success: true }
+    if (data.messages.length === 0) return { success: true, inserted: [] as any[] }
 
     const rows = data.messages.map((m) => ({
       conversationId: data.conversationId,
@@ -154,7 +159,7 @@ export const saveMessages = createServerFn({ method: 'POST' })
       outputTokens: m.outputTokens ?? null,
       modelUsed: m.modelUsed ?? null,
     }))
-    await db.insert(chatMessage).values(rows)
+    const inserted = await db.insert(chatMessage).values(rows).returning()
 
     // Touch updatedAt on the conversation
     await db
@@ -162,7 +167,7 @@ export const saveMessages = createServerFn({ method: 'POST' })
       .set({ updatedAt: new Date() })
       .where(eq(chatConversation.id, data.conversationId))
 
-    return { success: true }
+    return { success: true, inserted }
   })
 
 // ── Create conversation AND send first message (atomic) ──────────────
@@ -218,5 +223,29 @@ export const renameConversation = createServerFn({ method: 'POST' })
         ),
       )
       .returning()
+    return updated
+  })
+
+// Set feedback on an assistant message
+export const setMessageFeedback = createServerFn({ method: 'POST' })
+  .inputValidator((data: unknown) => setMessageFeedbackSchema.parse(data))
+  .handler(async ({ data }) => {
+    const session = await getSession()
+
+    const message = await db.query.chatMessage.findFirst({
+      where: eq(chatMessage.id, data.messageId),
+      with: { conversation: true },
+    })
+
+    if (!message || message.conversation.userId !== session.user.id) {
+      throw new Error('Message not found')
+    }
+
+    const [updated] = await db
+      .update(chatMessage)
+      .set({ userFeedback: data.feedback })
+      .where(eq(chatMessage.id, data.messageId))
+      .returning()
+
     return updated
   })

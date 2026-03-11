@@ -191,14 +191,28 @@ export default function ChatContainer({
     if (rows.length > 0) {
       saveMessages({
         data: { conversationId: activeConversationId, messages: rows },
-      }).catch(() => {})
+      })
+        .then((result) => {
+          const insertedAssistant = result.inserted?.find(
+            (m) => m.role === 'assistant',
+          )
+          if (!insertedAssistant?.id) return
+
+          // Replace client-side streamed ID with DB ID so feedback actions use a valid message ID.
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === lastMsg.id ? { ...m, id: insertedAssistant.id } : m,
+            ),
+          )
+        })
+        .catch(() => {})
     }
 
     // Trigger retitle after the very first assistant reply
     if (messages.filter((m) => m.role === 'assistant').length === 1) {
       autoRetitle(activeConversationId, messages)
     }
-  }, [isLoading, messages, activeConversationId, autoRetitle])
+  }, [isLoading, messages, activeConversationId, autoRetitle, setMessages])
 
   // ── Send (auto-creates conversation if none selected) ────────────
   const handleSend = useCallback(

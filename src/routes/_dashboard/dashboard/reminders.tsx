@@ -31,9 +31,9 @@ import { ReminderForm } from '@/components/dashboard/ReminderForm'
 import type { ReminderFormValues } from '@/components/dashboard/ReminderForm'
 import { formatLocalDateTime } from '@/lib/format-datetime'
 
-export const Route = createFileRoute('/_dashboard/dashboard/reminders')({
+export const Route = createFileRoute( '/_dashboard/dashboard/reminders' )( {
   component: RemindersPage,
-})
+} )
 
 const TYPE_CONFIG = {
   medication: {
@@ -66,42 +66,44 @@ const TYPE_CONFIG = {
 
 function RemindersPage() {
   const queryClient = useQueryClient()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState( false )
 
-  const { data: reminders = [], isLoading } = useQuery({
+  const { data: reminders = [], isLoading } = useQuery( {
     queryKey: ['reminders'],
     queryFn: () => listReminders(),
-  })
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
 
-  const createMut = useMutation({
+  const createMut = useMutation( {
     mutationFn: createReminder,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reminders'] })
-      setOpen(false)
+      queryClient.invalidateQueries( { queryKey: ['reminders'] } )
+      setOpen( false )
     },
-  })
-  const toggleMut = useMutation({
+  } )
+  const toggleMut = useMutation( {
     mutationFn: toggleReminder,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reminders'] }),
-  })
-  const deleteMut = useMutation({
+    onSuccess: () => queryClient.invalidateQueries( { queryKey: ['reminders'] } ),
+  } )
+  const deleteMut = useMutation( {
     mutationFn: deleteReminder,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['reminders'] }),
-  })
+    onSuccess: () => queryClient.invalidateQueries( { queryKey: ['reminders'] } ),
+  } )
 
-  const handleCreate = (values: ReminderFormValues) => {
-    createMut.mutate({
+  const handleCreate = ( values: ReminderFormValues ) => {
+    createMut.mutate( {
       data: {
         ...values,
         description: values.description || undefined,
       },
-    })
+    } )
   }
 
-  const pending = reminders.filter((r) => !r.isCompleted)
-  const done = reminders.filter((r) => r.isCompleted)
+  const pending = reminders.filter( ( r ) => !r.isCompleted )
+  const done = reminders.filter( ( r ) => r.isCompleted )
 
-  const ReminderRow = ({ r }: { r: (typeof reminders)[0] }) => {
+  const ReminderRow = ( { r }: { r: ( typeof reminders )[0] } ) => {
     const typeKey = (
       r.type in TYPE_CONFIG ? r.type : 'other'
     ) as keyof typeof TYPE_CONFIG
@@ -121,10 +123,10 @@ function RemindersPage() {
             <Checkbox
               className="mt-0.5"
               checked={r.isCompleted}
-              onCheckedChange={(checked) =>
-                toggleMut.mutate({
+              onCheckedChange={( checked ) =>
+                toggleMut.mutate( {
                   data: { id: r.id, isCompleted: checked as boolean },
-                })
+                } )
               }
             />
             <span
@@ -144,14 +146,14 @@ function RemindersPage() {
             </p>
           )}
           <p className="text-xs text-muted-foreground mt-0.5 ml-6">
-            {formatLocalDateTime(r.date, r.time)}
+            {formatLocalDateTime( r.date, r.time )}
           </p>
         </div>
         <Button
           variant="ghost"
           size="icon"
           className="h-7 w-7 shrink-0"
-          onClick={() => deleteMut.mutate({ data: { id: r.id } })}
+          onClick={() => deleteMut.mutate( { data: { id: r.id } } )}
         >
           <Trash2 className="h-3.5 w-3.5 text-destructive" />
         </Button>
@@ -188,9 +190,9 @@ function RemindersPage() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map( ( i ) => (
             <Skeleton key={i} className="h-16 w-full rounded-xl" />
-          ))}
+          ) )}
         </div>
       ) : reminders.length === 0 ? (
         <Card>
@@ -207,9 +209,9 @@ function RemindersPage() {
                 Pending ({pending.length})
               </p>
               <div className="space-y-2">
-                {pending.map((r) => (
+                {pending.map( ( r ) => (
                   <ReminderRow key={r.id} r={r} />
-                ))}
+                ) )}
               </div>
             </div>
           )}
@@ -219,9 +221,9 @@ function RemindersPage() {
                 Completed ({done.length})
               </p>
               <div className="space-y-2">
-                {done.map((r) => (
+                {done.map( ( r ) => (
                   <ReminderRow key={r.id} r={r} />
-                ))}
+                ) )}
               </div>
             </div>
           )}

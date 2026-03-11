@@ -19,6 +19,10 @@ export function useChatTextarea({
   const maxHeight = lineHeight * maxLines
   const prevIsMultiline = useRef(isMultiline)
 
+  useEffect(() => {
+    setValue(text)
+  }, [text])
+
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const textarea = textareaRef.current
     if (!textarea) return
@@ -55,6 +59,15 @@ export function useChatTextarea({
     }
   }, [value, lineHeight])
 
+  const clear = () => {
+    setValue('')
+    setText('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = `${lineHeight}px`
+    }
+    setIsMultiline(false)
+  }
+
   // Refocus and move cursor to end when switching to multiline
   useEffect(() => {
     if (isMultiline && !prevIsMultiline.current && textareaRef.current) {
@@ -72,5 +85,6 @@ export function useChatTextarea({
     lineHeight,
     maxHeight,
     handleInput,
+    clear,
   }
 }

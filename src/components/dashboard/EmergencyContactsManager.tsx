@@ -37,51 +37,53 @@ import {
 } from '@/server/user'
 import { Phone, UserPlus, Trash2, Users } from 'lucide-react'
 
-const contactSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+const contactSchema = z.object( {
+  name: z.string().min( 1, 'Name is required' ),
   relationship: z.string().optional(),
-  phone: z.string().min(1, 'Phone is required'),
-  email: z.string().email().optional().or(z.literal('')),
-})
+  phone: z.string().min( 1, 'Phone is required' ),
+  email: z.string().email().optional().or( z.literal( '' ) ),
+} )
 
 type ContactFormValues = z.infer<typeof contactSchema>
 
 export function EmergencyContactsManager() {
   const queryClient = useQueryClient()
 
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery( {
     queryKey: ['userProfile'],
     queryFn: () => getUserProfile(),
-  })
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
 
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactSchema),
+  const form = useForm<ContactFormValues>( {
+    resolver: zodResolver( contactSchema ),
     defaultValues: { name: '', relationship: '', phone: '', email: '' },
-  })
+  } )
 
-  const addMut = useMutation({
+  const addMut = useMutation( {
     mutationFn: addEmergencyContact,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userProfile'] })
+      queryClient.invalidateQueries( { queryKey: ['userProfile'] } )
       form.reset()
     },
-  })
+  } )
 
-  const deleteMut = useMutation({
+  const deleteMut = useMutation( {
     mutationFn: deleteEmergencyContact,
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['userProfile'] }),
-  })
+      queryClient.invalidateQueries( { queryKey: ['userProfile'] } ),
+  } )
 
-  const onSubmit = (values: ContactFormValues) => {
-    addMut.mutate({
+  const onSubmit = ( values: ContactFormValues ) => {
+    addMut.mutate( {
       data: {
         name: values.name,
         relationship: values.relationship || undefined,
         phone: values.phone,
         email: values.email || undefined,
       },
-    })
+    } )
   }
 
   const contacts = profile?.emergencyContacts ?? []
@@ -97,7 +99,7 @@ export function EmergencyContactsManager() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {contacts.map((c) => (
+            {contacts.map( ( c ) => (
               <div
                 key={c.id}
                 className="flex items-center gap-3 rounded-lg border border-border/60 p-3"
@@ -108,7 +110,7 @@ export function EmergencyContactsManager() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{c.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {[c.relationship, c.phone].filter(Boolean).join(' · ')}
+                    {[c.relationship, c.phone].filter( Boolean ).join( ' · ' )}
                   </p>
                   {c.email && (
                     <p className="text-xs text-muted-foreground">{c.email}</p>
@@ -134,7 +136,7 @@ export function EmergencyContactsManager() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => deleteMut.mutate({ data: { id: c.id } })}
+                        onClick={() => deleteMut.mutate( { data: { id: c.id } } )}
                       >
                         Remove
                       </AlertDialogAction>
@@ -142,7 +144,7 @@ export function EmergencyContactsManager() {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-            ))}
+            ) )}
           </CardContent>
         </Card>
       ) : (
@@ -165,12 +167,12 @@ export function EmergencyContactsManager() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit( onSubmit )} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="name"
-                  render={({ field }) => (
+                  render={( { field } ) => (
                     <FormItem>
                       <FormLabel>Full Name *</FormLabel>
                       <FormControl>
@@ -183,7 +185,7 @@ export function EmergencyContactsManager() {
                 <FormField
                   control={form.control}
                   name="relationship"
-                  render={({ field }) => (
+                  render={( { field } ) => (
                     <FormItem>
                       <FormLabel>Relationship</FormLabel>
                       <FormControl>
@@ -198,7 +200,7 @@ export function EmergencyContactsManager() {
                 <FormField
                   control={form.control}
                   name="phone"
-                  render={({ field }) => (
+                  render={( { field } ) => (
                     <FormItem>
                       <FormLabel>Phone *</FormLabel>
                       <FormControl>
@@ -211,7 +213,7 @@ export function EmergencyContactsManager() {
                 <FormField
                   control={form.control}
                   name="email"
-                  render={({ field }) => (
+                  render={( { field } ) => (
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>

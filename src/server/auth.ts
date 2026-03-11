@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { auth } from '@/lib/auth'
-import { getRequest } from '@tanstack/react-start/server'
+import { getRequest } from '@tanstack/start-server-core'
 import { db } from '@/db'
 import { user } from '@/db/schema'
 import { eq } from 'drizzle-orm'

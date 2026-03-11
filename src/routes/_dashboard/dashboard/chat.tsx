@@ -96,8 +96,9 @@ function ChatPage() {
         conv,
         ...prev.filter((c) => c.id !== conv.id),
       ])
+      navigate({ to: '/dashboard/chat/$chatId', params: { chatId: conv.id } })
     },
-    [],
+    [navigate],
   )
 
   const handleTitleUpdated = useCallback((id: string, title: string) => {

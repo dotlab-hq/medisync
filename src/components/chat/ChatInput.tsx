@@ -23,11 +23,12 @@ export default function ChatInput({
   disabled,
   placeholder,
 }: ChatInputProps) {
-  const { textareaRef, value, lineHeight, handleInput } = useChatTextarea({
+  const { textareaRef, value, lineHeight, handleInput, clear } = useChatTextarea(
+    {
     lineHeight: 24,
     maxLines: 7,
-  })
-
+    },
+  )
   const { setText } = useChatTextareaStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -46,12 +47,7 @@ export default function ChatInput({
 
     onSend(text, hasFiles ? files : undefined)
 
-    // Reset textarea
-    if (textareaRef.current) {
-      textareaRef.current.value = ''
-      textareaRef.current.style.height = `${lineHeight}px`
-      setText('')
-    }
+    clear()
     clearFiles()
   }, [
     value,
@@ -59,9 +55,7 @@ export default function ChatInput({
     hasFiles,
     disabled,
     onSend,
-    textareaRef,
-    lineHeight,
-    setText,
+    clear,
     clearFiles,
   ])
 

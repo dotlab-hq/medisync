@@ -1,4 +1,4 @@
-import { getRequest } from '@tanstack/react-start/server'
+import { getRequest } from '@tanstack/start-server-core'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { db } from '@/db'

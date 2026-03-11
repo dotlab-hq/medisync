@@ -32,54 +32,26 @@ type MessageBubbleProps = {
   isStreaming?: boolean
 }
 
-function formatFileSize(bytes: number): string {
+function formatFileSize( bytes: number ): string {
   const units = ['B', 'KB', 'MB', 'GB']
   let size = bytes
   let idx = 0
-  while (size >= 1024 && idx < units.length - 1) {
+  while ( size >= 1024 && idx < units.length - 1 ) {
     size /= 1024
     idx++
   }
-  return `${size.toFixed(1)} ${units[idx]}`
+  return `${size.toFixed( 1 )} ${units[idx]}`
 }
 
 // Helper function to extract text from parts
-function extractTextFromParts(parts: MessagePart[]): string {
+function extractTextFromParts( parts: MessagePart[] ): string {
   return parts
-    .filter((p) => p.type === 'text')
-    .map((p) => p.content || p.text || '')
-    .join('')
+    .filter( ( p ) => p.type === 'text' )
+    .map( ( p ) => p.content || p.text || '' )
+    .join( '' )
 }
 
-// Helper to render tool outputs
-function renderToolOutput(output: Record<string, unknown>) {
-  if ('url' in output && 'fileName' in output) {
-    return (
-      <a
-        href={output.url as string}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-primary underline"
-      >
-        📎 {output.fileName as string}
-      </a>
-    )
-  }
-  if ('files' in output && Array.isArray(output.files)) {
-    return (
-      <ul className="list-inside list-disc space-y-0.5">
-        {(output.files as Array<{ id: string; fileName: string }>).map((f) => (
-          <li key={f.id}>{f.fileName}</li>
-        ))}
-      </ul>
-    )
-  }
-  return (
-    <pre className="whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>
-  )
-}
-
-export default function MessageBubble({
+export default function MessageBubble( {
   messageId,
   role,
   reasoning,
@@ -89,12 +61,24 @@ export default function MessageBubble({
   modelUsed,
   parts,
   isStreaming = false,
-}: MessageBubbleProps) {
+}: MessageBubbleProps ) {
   const isUser = role === 'user'
   const isAssistant = role === 'assistant'
 
   // Extract text content from parts for markdown rendering
-  const textContent = extractTextFromParts(parts)
+  const textContent = extractTextFromParts( parts )
+
+  // Resolve reasoning: prefer explicit prop (from DB), fall back to thinking parts (streaming)
+  const resolvedReasoning =
+    reasoning ||
+    parts
+      .filter( ( p ) => p.type === 'thinking' )
+      .map( ( p ) => p.content || p.text || '' )
+      .join( '\n' ) ||
+    null
+
+  // Collect tool-call parts
+  const toolCallParts = parts.filter( ( p ) => p.type === 'tool-call' )
 
   return (
     <div
@@ -117,10 +101,12 @@ export default function MessageBubble({
 
       {/* Content column */}
       <div
-        className={cn('flex flex-col gap-2 max-w-[75%]', isUser && 'items-end')}
+        className={cn( 'flex flex-col gap-2 max-w-[75%]', isUser && 'items-end' )}
       >
-        {/* Reasoning block (assistant only) */}
-        {isAssistant && reasoning && <ReasoningBlock reasoning={reasoning} />}
+        {/* Reasoning + tool calls block (assistant only) */}
+        {isAssistant && ( resolvedReasoning || toolCallParts.length > 0 ) && (
+          <ReasoningBlock reasoning={resolvedReasoning} toolCalls={toolCallParts} />
+        )}
 
         {/* Bubble */}
         <div
@@ -138,33 +124,14 @@ export default function MessageBubble({
           )}
         </div>
 
-        {/* Tool calls (assistant only) */}
-        {isAssistant && parts.some((p) => p.type === 'tool-call') && (
-          <div className="flex flex-col gap-2">
-            {parts
-              .filter((p) => p.type === 'tool-call')
-              .map((part, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-md border border-border/50 bg-background/50 px-3 py-2 text-xs"
-                >
-                  <span className="font-mono text-muted-foreground">
-                    🔧 {part.name}
-                  </span>
-                  {part.output && (
-                    <div className="mt-1">{renderToolOutput(part.output)}</div>
-                  )}
-                </div>
-              ))}
-          </div>
-        )}
+
 
         {/* Attachments */}
         {attachments && attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-1">
-            {attachments.map((att, idx) => {
-              const isImage = att.type.startsWith('image/')
-              if (isImage) {
+            {attachments.map( ( att, idx ) => {
+              const isImage = att.type.startsWith( 'image/' )
+              if ( isImage ) {
                 return (
                   <a
                     key={idx}
@@ -193,17 +160,17 @@ export default function MessageBubble({
                       {att.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatFileSize(att.size)}
+                      {formatFileSize( att.size )}
                     </p>
                   </div>
                 </a>
               )
-            })}
+            } )}
           </div>
         )}
 
         {/* Token usage (subtle) */}
-        {isAssistant && (inputTokens || outputTokens) && (
+        {isAssistant && ( inputTokens || outputTokens ) && (
           <div className="flex gap-3 text-[10px] text-muted-foreground/50 px-1">
             {inputTokens && <span>{inputTokens} in</span>}
             {outputTokens && <span>{outputTokens} out</span>}

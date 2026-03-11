@@ -22,9 +22,9 @@ import {
   EditFolderDialog,
 } from '@/components/dashboard/FolderDialogs'
 
-export const Route = createFileRoute('/_dashboard/dashboard/documents')({
+export const Route = createFileRoute( '/_dashboard/dashboard/documents' )( {
   component: DocumentsPage,
-})
+} )
 
 interface EditingFolder {
   id: string
@@ -35,78 +35,84 @@ interface EditingFolder {
 function DocumentsPage() {
   const queryClient = useQueryClient()
 
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
-  const [activeLabels, setActiveLabels] = useState<string[]>([])
-  const [editFolder, setEditFolder] = useState<EditingFolder | null>(null)
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>( null )
+  const [activeLabels, setActiveLabels] = useState<string[]>( [] )
+  const [editFolder, setEditFolder] = useState<EditingFolder | null>( null )
 
   // Queries
-  const { data: storage } = useQuery({
+  const { data: storage } = useQuery( {
     queryKey: ['userStorage'],
     queryFn: () => getUserStorage(),
-  })
-  const { data: folders = [] } = useQuery({
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
+  const { data: folders = [] } = useQuery( {
     queryKey: ['folders'],
     queryFn: () => listFolders(),
-  })
-  const { data: allDocuments = [], isLoading: docsLoading } = useQuery({
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
+  const { data: allDocuments = [], isLoading: docsLoading } = useQuery( {
     queryKey: ['documents'],
     queryFn: () => listAllDocuments(),
-  })
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
 
   // Mutations
-  const deleteFolderMutation = useMutation({
+  const deleteFolderMutation = useMutation( {
     mutationFn: deleteFolder,
-    onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['folders'] })
-      queryClient.invalidateQueries({ queryKey: ['documents'] })
-      const id = (vars as { data: { id: string } })?.data?.id
-      if (id && selectedFolderId === id) setSelectedFolderId(null)
+    onSuccess: ( _data, vars ) => {
+      queryClient.invalidateQueries( { queryKey: ['folders'] } )
+      queryClient.invalidateQueries( { queryKey: ['documents'] } )
+      const id = ( vars as { data: { id: string } } )?.data?.id
+      if ( id && selectedFolderId === id ) setSelectedFolderId( null )
     },
-  })
-  const deleteDocMutation = useMutation({
+  } )
+  const deleteDocMutation = useMutation( {
     mutationFn: deleteDocument,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] })
-      queryClient.invalidateQueries({ queryKey: ['userStorage'] })
+      queryClient.invalidateQueries( { queryKey: ['documents'] } )
+      queryClient.invalidateQueries( { queryKey: ['userStorage'] } )
     },
-  })
+  } )
 
   // Derived data
   const allLabels = useMemo(
     () =>
       Array.from(
-        new Set([
-          ...folders.flatMap((f) => f.labels),
-          ...allDocuments.flatMap((d) => d.labels),
-        ]),
+        new Set( [
+          ...folders.flatMap( ( f ) => f.labels ),
+          ...allDocuments.flatMap( ( d ) => d.labels ),
+        ] ),
       ),
     [folders, allDocuments],
   )
 
-  const docCountByFolder = useMemo(() => {
+  const docCountByFolder = useMemo( () => {
     const counts: Record<string, number> = {}
-    for (const d of allDocuments) {
-      if (d.folderId) counts[d.folderId] = (counts[d.folderId] ?? 0) + 1
+    for ( const d of allDocuments ) {
+      if ( d.folderId ) counts[d.folderId] = ( counts[d.folderId] ?? 0 ) + 1
     }
     return counts
-  }, [allDocuments])
+  }, [allDocuments] )
 
   const filteredDocuments = useMemo(
     () =>
-      allDocuments.filter((doc) => {
-        if (selectedFolderId !== null && doc.folderId !== selectedFolderId)
+      allDocuments.filter( ( doc ) => {
+        if ( selectedFolderId !== null && doc.folderId !== selectedFolderId )
           return false
         if (
           activeLabels.length > 0 &&
-          !activeLabels.every((l) => doc.labels.includes(l))
+          !activeLabels.every( ( l ) => doc.labels.includes( l ) )
         )
           return false
         return true
-      }),
+      } ),
     [allDocuments, selectedFolderId, activeLabels],
   )
 
-  if (docsLoading && allDocuments.length === 0) return <DocumentsSkeleton />
+  if ( docsLoading && allDocuments.length === 0 ) return <DocumentsSkeleton />
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -132,7 +138,7 @@ function DocumentsPage() {
           selectedFolderId={selectedFolderId}
           onSelectFolder={setSelectedFolderId}
           onEditFolder={setEditFolder}
-          onDeleteFolder={(id) => deleteFolderMutation.mutate({ data: { id } })}
+          onDeleteFolder={( id ) => deleteFolderMutation.mutate( { data: { id } } )}
           storage={storage}
         />
 
@@ -141,17 +147,17 @@ function DocumentsPage() {
           <LabelFilterBar
             allLabels={allLabels}
             activeLabels={activeLabels}
-            onToggle={(label) =>
-              setActiveLabels((prev) =>
-                prev.includes(label)
-                  ? prev.filter((l) => l !== label)
+            onToggle={( label ) =>
+              setActiveLabels( ( prev ) =>
+                prev.includes( label )
+                  ? prev.filter( ( l ) => l !== label )
                   : [...prev, label],
               )
             }
-            onClear={() => setActiveLabels([])}
+            onClear={() => setActiveLabels( [] )}
           />
 
-          {(selectedFolderId !== null || activeLabels.length > 0) && (
+          {( selectedFolderId !== null || activeLabels.length > 0 ) && (
             <p className="text-xs text-muted-foreground">
               Showing {filteredDocuments.length} file(s)
               {selectedFolderId && (
@@ -159,7 +165,7 @@ function DocumentsPage() {
                   {' '}
                   in{' '}
                   <span className="font-medium">
-                    {folders.find((f) => f.id === selectedFolderId)?.name}
+                    {folders.find( ( f ) => f.id === selectedFolderId )?.name}
                   </span>
                 </>
               )}
@@ -170,7 +176,7 @@ function DocumentsPage() {
             documents={filteredDocuments}
             allDocumentsCount={allDocuments.length}
             isLoading={docsLoading}
-            onDelete={(id) => deleteDocMutation.mutate({ data: { id } })}
+            onDelete={( id ) => deleteDocMutation.mutate( { data: { id } } )}
           />
         </div>
       </div>
@@ -178,14 +184,14 @@ function DocumentsPage() {
       <EditFolderDialog
         TagifyInput={TagifyInput}
         editFolder={editFolder}
-        onEditClose={() => setEditFolder(null)}
+        onEditClose={() => setEditFolder( null )}
       />
     </div>
   )
 }
 
 // Inline sub-component to keep the main function lean
-function LabelFilterBar({
+function LabelFilterBar( {
   allLabels,
   activeLabels,
   onToggle,
@@ -193,24 +199,24 @@ function LabelFilterBar({
 }: {
   allLabels: string[]
   activeLabels: string[]
-  onToggle: (label: string) => void
+  onToggle: ( label: string ) => void
   onClear: () => void
-}) {
-  if (allLabels.length === 0) return null
+} ) {
+  if ( allLabels.length === 0 ) return null
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
       <span className="text-xs text-muted-foreground">Filter by label:</span>
-      {allLabels.map((label) => (
+      {allLabels.map( ( label ) => (
         <Badge
           key={label}
-          variant={activeLabels.includes(label) ? 'default' : 'outline'}
+          variant={activeLabels.includes( label ) ? 'default' : 'outline'}
           className="cursor-pointer select-none"
-          onClick={() => onToggle(label)}
+          onClick={() => onToggle( label )}
         >
           {label}
         </Badge>
-      ))}
+      ) )}
       {activeLabels.length > 0 && (
         <Button
           variant="ghost"

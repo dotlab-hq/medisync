@@ -25,43 +25,45 @@ import { getUserProfile, upsertMedicalInfo } from '@/server/user'
 import { useState } from 'react'
 import { HeartPulse } from 'lucide-react'
 
-const medicalInfoSchema = z.object({
+const medicalInfoSchema = z.object( {
   allergies: z.string(),
   chronicConditions: z.string(),
   currentMedications: z.string(),
-})
+} )
 
 type MedicalInfoFormValues = z.infer<typeof medicalInfoSchema>
 
 export function MedicalInfoForm() {
   const queryClient = useQueryClient()
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState( false )
 
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery( {
     queryKey: ['userProfile'],
     queryFn: () => getUserProfile(),
-  })
+    enabled: !import.meta.env.SSR,
+    retry: false,
+  } )
 
-  const form = useForm<MedicalInfoFormValues>({
-    resolver: zodResolver(medicalInfoSchema),
+  const form = useForm<MedicalInfoFormValues>( {
+    resolver: zodResolver( medicalInfoSchema ),
     values: {
       allergies: profile?.medicalInformation?.allergies ?? '',
       chronicConditions: profile?.medicalInformation?.chronicConditions ?? '',
       currentMedications: profile?.medicalInformation?.currentMedications ?? '',
     },
-  })
+  } )
 
-  const mut = useMutation({
+  const mut = useMutation( {
     mutationFn: upsertMedicalInfo,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userProfile'] })
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      queryClient.invalidateQueries( { queryKey: ['userProfile'] } )
+      setSaved( true )
+      setTimeout( () => setSaved( false ), 3000 )
     },
-  })
+  } )
 
-  const onSubmit = (values: MedicalInfoFormValues) => {
-    mut.mutate({ data: values })
+  const onSubmit = ( values: MedicalInfoFormValues ) => {
+    mut.mutate( { data: values } )
   }
 
   return (
@@ -84,11 +86,11 @@ export function MedicalInfoForm() {
           </Alert>
         )}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit( onSubmit )} className="space-y-5">
             <FormField
               control={form.control}
               name="allergies"
-              render={({ field }) => (
+              render={( { field } ) => (
                 <FormItem>
                   <FormLabel>Allergies</FormLabel>
                   <FormControl>
@@ -108,7 +110,7 @@ export function MedicalInfoForm() {
             <FormField
               control={form.control}
               name="chronicConditions"
-              render={({ field }) => (
+              render={( { field } ) => (
                 <FormItem>
                   <FormLabel>Chronic Conditions</FormLabel>
                   <FormControl>
@@ -128,7 +130,7 @@ export function MedicalInfoForm() {
             <FormField
               control={form.control}
               name="currentMedications"
-              render={({ field }) => (
+              render={( { field } ) => (
                 <FormItem>
                   <FormLabel>Current Medications</FormLabel>
                   <FormControl>
