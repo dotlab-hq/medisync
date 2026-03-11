@@ -13,3 +13,4 @@ dist
 dist-ssr
 node_modules
 todos.json
+package-lock.json
