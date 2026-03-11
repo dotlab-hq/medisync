@@ -14,7 +14,9 @@ export default function Footer() {
               <Heart className="h-4 w-4 text-primary" />
             </span>
             <div>
-              <p className="m-0 text-base font-bold text-foreground">MediSync</p>
+              <p className="m-0 text-base font-bold text-foreground">
+                MediSync
+              </p>
               <p className="m-0 text-xs text-muted-foreground">
                 Emergency Medical Data on the Go
               </p>

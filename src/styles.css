@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "highlight.js/styles/github-dark.css";
-@import "katex/dist/katex.min.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'highlight.js/styles/github-dark.css';
+@import 'katex/dist/katex.min.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -68,31 +68,31 @@
   --card-foreground: oklch(0.18 0.02 170);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 170);
-  --primary: oklch(0.702 0.120 170.9);
+  --primary: oklch(0.702 0.12 170.9);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.94 0.04 150);
-  --secondary-foreground: oklch(0.20 0.03 170);
+  --secondary-foreground: oklch(0.2 0.03 170);
   --muted: oklch(0.95 0.015 100);
-  --muted-foreground: oklch(0.50 0.03 170);
+  --muted-foreground: oklch(0.5 0.03 170);
   --accent: oklch(0.92 0.03 163);
-  --accent-foreground: oklch(0.20 0.03 170);
+  --accent-foreground: oklch(0.2 0.03 170);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.90 0.02 170);
-  --input: oklch(0.90 0.02 170);
-  --ring: oklch(0.702 0.120 170.9);
-  --chart-1: oklch(0.702 0.120 170.9);
+  --border: oklch(0.9 0.02 170);
+  --input: oklch(0.9 0.02 170);
+  --ring: oklch(0.702 0.12 170.9);
+  --chart-1: oklch(0.702 0.12 170.9);
   --chart-2: oklch(0.869 0.107 150.2);
   --chart-3: oklch(0.745 0.066 163.5);
   --chart-4: oklch(0.933 0.034 101.6);
   --chart-5: oklch(0.875 0.146 87.1);
   --sidebar: oklch(0.97 0.015 165);
   --sidebar-foreground: oklch(0.18 0.02 170);
-  --sidebar-primary: oklch(0.702 0.120 170.9);
+  --sidebar-primary: oklch(0.702 0.12 170.9);
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.93 0.03 163);
-  --sidebar-accent-foreground: oklch(0.20 0.03 170);
-  --sidebar-border: oklch(0.90 0.02 170);
-  --sidebar-ring: oklch(0.702 0.120 170.9);
+  --sidebar-accent-foreground: oklch(0.2 0.03 170);
+  --sidebar-border: oklch(0.9 0.02 170);
+  --sidebar-ring: oklch(0.702 0.12 170.9);
 }
 
 /* ─── Dark theme ─── */
@@ -107,7 +107,7 @@
   --primary-foreground: oklch(0.16 0.015 170);
   --secondary: oklch(0.26 0.025 170);
   --secondary-foreground: oklch(0.96 0.01 150);
-  --muted: oklch(0.26 0.020 170);
+  --muted: oklch(0.26 0.02 170);
   --muted-foreground: oklch(0.68 0.03 163);
   --accent: oklch(0.28 0.025 163);
   --accent-foreground: oklch(0.96 0.01 150);
@@ -115,12 +115,12 @@
   --border: oklch(0.745 0.066 163.5 / 15%);
   --input: oklch(0.745 0.066 163.5 / 20%);
   --ring: oklch(0.869 0.107 150.2);
-  --chart-1: oklch(0.702 0.120 170.9);
+  --chart-1: oklch(0.702 0.12 170.9);
   --chart-2: oklch(0.869 0.107 150.2);
   --chart-3: oklch(0.875 0.146 87.1);
   --chart-4: oklch(0.745 0.066 163.5);
   --chart-5: oklch(0.933 0.034 101.6);
-  --sidebar: oklch(0.19 0.020 170);
+  --sidebar: oklch(0.19 0.02 170);
   --sidebar-foreground: oklch(0.96 0.01 150);
   --sidebar-primary: oklch(0.869 0.107 150.2);
   --sidebar-primary-foreground: oklch(0.16 0.015 170);
@@ -156,8 +156,18 @@
 }
 
 /* ─── Stagger delay utilities ─── */
-.stagger-1 { animation-delay: 0.1s; }
-.stagger-2 { animation-delay: 0.2s; }
-.stagger-3 { animation-delay: 0.3s; }
-.stagger-4 { animation-delay: 0.4s; }
-.stagger-5 { animation-delay: 0.5s; }
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+.stagger-5 {
+  animation-delay: 0.5s;
+}

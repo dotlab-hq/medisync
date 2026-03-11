@@ -60,7 +60,7 @@ jobs:
           # Import using CLI with correct syntax
           npx @dotlab-hq/env-cli import file medisync .env --from ./.env --merge --yes \
             --username wpsadi \
-            --api-key ${{ secrets.ENV_MANAGER_KEY }} 
+            --api-key ${{ secrets.ENV_MANAGER_KEY }}
 
       - name: Set environment variables on Vercel
         run: |

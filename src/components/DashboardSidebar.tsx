@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from '@tanstack/react-router'
 import {
   Home,
   FileText,
@@ -14,105 +14,117 @@ import {
   LogOut,
   Menu,
   MessageSquare,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
-import { authClient } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
-import { m } from "@/paraglide/messages";
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Separator } from '@/components/ui/separator'
+import { authClient } from '@/lib/auth-client'
+import { cn } from '@/lib/utils'
+import { m } from '@/paraglide/messages'
 
 interface NavItem {
-  label: string;
-  icon: LucideIcon;
-  path: string;
+  label: string
+  icon: LucideIcon
+  path: string
 }
 
 function getMainNav(): NavItem[] {
   return [
-    { label: m.sidebar_dashboard(), icon: Home, path: "/dashboard" },
-    { label: m.sidebar_documents(), icon: FileText, path: "/dashboard/documents" },
-    { label: m.sidebar_qr(), icon: QrCode, path: "/dashboard/qr-code" },
-    { label: m.sidebar_reminders(), icon: Bell, path: "/dashboard/reminders" },
-    { label: m.sidebar_appointments(), icon: Calendar, path: "/dashboard/appointments" },
-    { label: m.sidebar_camps(), icon: Heart, path: "/camps" },
-    { label: m.sidebar_geo(), icon: MapPin, path: "/geo-assistance" },
-    { label: "AI Chat", icon: MessageSquare, path: "/dashboard/chat" },
-  ];
+    { label: m.sidebar_dashboard(), icon: Home, path: '/dashboard' },
+    {
+      label: m.sidebar_documents(),
+      icon: FileText,
+      path: '/dashboard/documents',
+    },
+    { label: m.sidebar_qr(), icon: QrCode, path: '/dashboard/qr-code' },
+    { label: m.sidebar_reminders(), icon: Bell, path: '/dashboard/reminders' },
+    {
+      label: m.sidebar_appointments(),
+      icon: Calendar,
+      path: '/dashboard/appointments',
+    },
+    { label: m.sidebar_camps(), icon: Heart, path: '/camps' },
+    { label: m.sidebar_geo(), icon: MapPin, path: '/geo-assistance' },
+    { label: 'AI Chat', icon: MessageSquare, path: '/dashboard/chat' },
+  ]
 }
 
 function getAccountNav(): NavItem[] {
   return [
-    { label: m.sidebar_profile(), icon: User, path: "/dashboard/profile" },
-    { label: m.sidebar_settings(), icon: Settings, path: "/dashboard/settings" },
-    { label: m.sidebar_developer(), icon: Key, path: "/dashboard/developer" },
-    { label: m.sidebar_help(), icon: HelpCircle, path: "/help" },
-  ];
+    { label: m.sidebar_profile(), icon: User, path: '/dashboard/profile' },
+    {
+      label: m.sidebar_settings(),
+      icon: Settings,
+      path: '/dashboard/settings',
+    },
+    { label: m.sidebar_developer(), icon: Key, path: '/dashboard/developer' },
+    { label: m.sidebar_help(), icon: HelpCircle, path: '/help' },
+  ]
 }
 
-function NavItems( { onNavigate }: { onNavigate?: () => void } ) {
-  const location = useLocation();
-  const pathname = location.pathname;
+function NavItems({ onNavigate }: { onNavigate?: () => void }) {
+  const location = useLocation()
+  const pathname = location.pathname
 
   return (
     <div className="flex flex-col gap-1 px-3">
-      {getMainNav().map( ( { label, icon: Icon, path } ) => (
+      {getMainNav().map(({ label, icon: Icon, path }) => (
         <Link
           key={path}
           to={path}
           onClick={onNavigate}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-            "text-muted-foreground hover:bg-primary/10 hover:text-primary",
-            pathname === path && "bg-primary/10 text-primary font-semibold",
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
+            'text-muted-foreground hover:bg-primary/10 hover:text-primary',
+            pathname === path && 'bg-primary/10 text-primary font-semibold',
           )}
         >
           <Icon className="h-4 w-4" />
           {label}
         </Link>
-      ) )}
+      ))}
 
       <Separator className="my-2" />
       <p className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Account
       </p>
 
-      {getAccountNav().map( ( { label, icon: Icon, path } ) => (
+      {getAccountNav().map(({ label, icon: Icon, path }) => (
         <Link
           key={path}
           to={path}
           onClick={onNavigate}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-            "text-muted-foreground hover:bg-primary/10 hover:text-primary",
-            pathname === path && "bg-primary/10 text-primary font-semibold",
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
+            'text-muted-foreground hover:bg-primary/10 hover:text-primary',
+            pathname === path && 'bg-primary/10 text-primary font-semibold',
           )}
         >
           <Icon className="h-4 w-4" />
           {label}
         </Link>
-      ) )}
+      ))}
     </div>
-  );
+  )
 }
 
 export default function DashboardSidebar() {
-  const [mobileOpen, setMobileOpen] = useState( false );
-  const [isMobile, setIsMobile] = useState( false );
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
-  useEffect( () => {
-    const check = () => setIsMobile( window.innerWidth < 1024 );
-    check();
-    window.addEventListener( "resize", check );
-    return () => window.removeEventListener( "resize", check );
-  }, [] );
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const handleLogout = async () => {
-    await authClient.signOut();
-    window.location.href = "/";
-  };
+    await authClient.signOut()
+    window.location.href = '/'
+  }
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
@@ -126,7 +138,7 @@ export default function DashboardSidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">
-        <NavItems onNavigate={() => setMobileOpen( false )} />
+        <NavItems onNavigate={() => setMobileOpen(false)} />
       </nav>
 
       <div className="border-t border-border/50 p-3">
@@ -140,7 +152,7 @@ export default function DashboardSidebar() {
         </Button>
       </div>
     </div>
-  );
+  )
 
   return (
     <>
@@ -169,5 +181,5 @@ export default function DashboardSidebar() {
         {sidebarContent}
       </aside>
     </>
-  );
+  )
 }

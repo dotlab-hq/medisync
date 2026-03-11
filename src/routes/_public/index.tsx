@@ -7,26 +7,43 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Shield,
-  QrCode,
-  Bell,
-  FileText,
-  Activity,
-  Heart,
-} from 'lucide-react'
+import { Shield, QrCode, Bell, FileText, Activity, Heart } from 'lucide-react'
 import { m } from '@/paraglide/messages'
 
 export const Route = createFileRoute('/_public/')({ component: HomePage })
 
 function getFeatures() {
   return [
-    { icon: QrCode, title: m.feature_qr_title(), description: m.feature_qr_desc() },
-    { icon: FileText, title: m.feature_records_title(), description: m.feature_records_desc() },
-    { icon: Bell, title: m.feature_reminders_title(), description: m.feature_reminders_desc() },
-    { icon: Activity, title: m.feature_health_title(), description: m.feature_health_desc() },
-    { icon: Shield, title: m.feature_contacts_title(), description: m.feature_contacts_desc() },
-    { icon: Heart, title: m.feature_multilang_title(), description: m.feature_multilang_desc() },
+    {
+      icon: QrCode,
+      title: m.feature_qr_title(),
+      description: m.feature_qr_desc(),
+    },
+    {
+      icon: FileText,
+      title: m.feature_records_title(),
+      description: m.feature_records_desc(),
+    },
+    {
+      icon: Bell,
+      title: m.feature_reminders_title(),
+      description: m.feature_reminders_desc(),
+    },
+    {
+      icon: Activity,
+      title: m.feature_health_title(),
+      description: m.feature_health_desc(),
+    },
+    {
+      icon: Shield,
+      title: m.feature_contacts_title(),
+      description: m.feature_contacts_desc(),
+    },
+    {
+      icon: Heart,
+      title: m.feature_multilang_title(),
+      description: m.feature_multilang_desc(),
+    },
   ]
 }
 

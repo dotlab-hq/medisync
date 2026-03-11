@@ -57,7 +57,10 @@ export default function Header() {
               key={to}
               to={to}
               className="rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              activeProps={{ className: 'rounded-lg px-3 py-2 bg-primary/10 text-primary font-semibold' }}
+              activeProps={{
+                className:
+                  'rounded-lg px-3 py-2 bg-primary/10 text-primary font-semibold',
+              }}
             >
               {label()}
             </Link>
@@ -100,7 +103,11 @@ export default function Header() {
             aria-label="Toggle menu"
             onClick={() => setIsMenuOpen((v) => !v)}
           >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </nav>
@@ -114,7 +121,10 @@ export default function Header() {
                 key={to}
                 to={to}
                 className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                activeProps={{ className: 'rounded-lg px-3 py-2.5 text-sm font-semibold bg-primary/10 text-primary' }}
+                activeProps={{
+                  className:
+                    'rounded-lg px-3 py-2.5 text-sm font-semibold bg-primary/10 text-primary',
+                }}
                 onClick={closeMenu}
               >
                 {label()}

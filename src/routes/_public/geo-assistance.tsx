@@ -1,23 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { lazy, Suspense } from "react";
-import { MapPin, Phone, Hospital } from "lucide-react";
-import { m } from "@/paraglide/messages";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/card'
+import { lazy, Suspense } from 'react'
+import { MapPin, Phone, Hospital } from 'lucide-react'
+import { m } from '@/paraglide/messages'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const NearbyMapEmbed = lazy(() =>
-  import("@/components/NearbyMapEmbed").then((mod) => ({ default: mod.NearbyMapEmbed }))
-);
+  import('@/components/NearbyMapEmbed').then((mod) => ({
+    default: mod.NearbyMapEmbed,
+  })),
+)
 
-export const Route = createFileRoute("/_public/geo-assistance")({
+export const Route = createFileRoute('/_public/geo-assistance')({
   component: GeoAssistancePage,
-});
+})
 
 function GeoAssistancePage() {
   return (
@@ -33,21 +35,29 @@ function GeoAssistancePage() {
       <Card className="animate-fade-in-up stagger-1 border-border/50">
         <CardHeader>
           <CardTitle>Emergency Numbers</CardTitle>
-          <CardDescription>Important numbers you should always have handy</CardDescription>
+          <CardDescription>
+            Important numbers you should always have handy
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {[
-            { label: "Ambulance", number: "102" },
-            { label: "Emergency (India)", number: "112" },
-            { label: "Police", number: "100" },
-            { label: "Fire", number: "101" },
+            { label: 'Ambulance', number: '102' },
+            { label: 'Emergency (India)', number: '112' },
+            { label: 'Police', number: '100' },
+            { label: 'Fire', number: '101' },
           ].map(({ label, number }) => (
-            <div key={number} className="flex items-center justify-between rounded-lg border border-border/50 p-3 transition-colors hover:bg-muted/50">
+            <div
+              key={number}
+              className="flex items-center justify-between rounded-lg border border-border/50 p-3 transition-colors hover:bg-muted/50"
+            >
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary" />
                 <span className="font-medium">{label}</span>
               </div>
-              <a href={`tel:${number}`} className="font-bold text-primary hover:underline">
+              <a
+                href={`tel:${number}`}
+                className="font-bold text-primary hover:underline"
+              >
                 {number}
               </a>
             </div>
@@ -61,17 +71,30 @@ function GeoAssistancePage() {
             <Hospital className="h-5 w-5 text-primary" />
             Hospitals Near You
           </CardTitle>
-          <CardDescription>Live map showing hospitals based on your current location.</CardDescription>
+          <CardDescription>
+            Live map showing hospitals based on your current location.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Suspense fallback={<Skeleton className="h-[420px] w-full rounded-xl" />}>
-            <NearbyMapEmbed query="hospital near me" title="Hospitals near me" heightClass="h-[420px]" />
+          <Suspense
+            fallback={<Skeleton className="h-[420px] w-full rounded-xl" />}
+          >
+            <NearbyMapEmbed
+              query="hospital near me"
+              title="Hospitals near me"
+              heightClass="h-[420px]"
+            />
           </Suspense>
-          <a href="https://www.google.com/maps/search/hospital+near+me" target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-primary hover:underline">
+          <a
+            href="https://www.google.com/maps/search/hospital+near+me"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-sm text-primary hover:underline"
+          >
             Open full map in Google Maps ↗
           </a>
         </CardContent>
       </Card>
     </main>
-  );
+  )
 }

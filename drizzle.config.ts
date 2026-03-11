@@ -7,8 +7,8 @@ export default defineConfig({
   out: './drizzle',
   schema: './src/db/schema',
   dialect: 'postgresql',
-  migrations:{
-    schema:"__drizzle_medisync"
+  migrations: {
+    schema: '__drizzle_medisync',
   },
   dbCredentials: {
     url: process.env.DATABASE_URL!,

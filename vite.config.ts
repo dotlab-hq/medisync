@@ -9,10 +9,10 @@ import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
 
-const config = defineConfig( {
+const config = defineConfig({
   plugins: [
     devtools(),
-    nitro( {
+    nitro({
       preset: 'vercel',
       rollupConfig: { external: [/^@sentry\//] },
 
@@ -32,27 +32,23 @@ const config = defineConfig( {
       //   nodeCompat: true
       // }
       output: {
-        dir: ".vercel/output",
+        dir: '.vercel/output',
       },
       vercel: {
-
         functions: {
-          runtime: "bun1.x"
-
+          runtime: 'bun1.x',
         },
-
-      }
-
-    } ),
-    tsconfigPaths( { projects: ['./tsconfig.json'] } ),
+      },
+    }),
+    tsconfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
-    paraglideVitePlugin( {
+    paraglideVitePlugin({
       project: './project.inlang',
       outdir: './src/paraglide',
-    } ),
+    }),
     tanstackStart(),
     viteReact(),
   ],
-} )
+})
 
 export default config

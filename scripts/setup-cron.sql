@@ -25,26 +25,29 @@ WHERE
     jobname LIKE 'medisync-%';
 
 -- Job 1: Process due reminders — fires every minute
--- Note: pg_net ≥ 0.8 requires body as text, not jsonb
+-- Guard: CASE WHEN EXISTS short-circuits; net.http_post is only called when rows are due.
 SELECT cron.schedule(
     'medisync-notify-reminders',
     '* * * * *',
-    $$SELECT net.http_post(
-        url                  => '{{APP_URL}}/api/cron/notify-reminders',
-        headers              => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
-        body                 => '{}'::jsonb,
-        timeout_milliseconds => 60000
-    )$$
+    $$SELECT CASE WHEN EXISTS (SELECT 1 FROM medisync.reminder WHERE to_be_sent_at IS NOT NULL AND to_be_sent_at <= now() AND is_completed = false LIMIT 1)
+    THEN net.http_post(
+      url => '{{APP_URL}}/api/cron/notify-reminders',
+      headers => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
+      body => '{}'::jsonb,
+      timeout_milliseconds => 60000
+    ) ELSE NULL END$$
 );
 
 -- Job 2: Process due appointment notifications — fires every minute
+-- Guard: CASE WHEN EXISTS short-circuits; net.http_post is only called when rows are due.
 SELECT cron.schedule(
     'medisync-notify-appointments',
     '* * * * *',
-    $$SELECT net.http_post(
-        url                  => '{{APP_URL}}/api/cron/notify-appointments',
-        headers              => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
-        body                 => '{}'::jsonb,
-        timeout_milliseconds => 60000
-    )$$
+    $$SELECT CASE WHEN EXISTS (SELECT 1 FROM medisync.appointment WHERE to_be_sent_at IS NOT NULL AND to_be_sent_at <= now() AND status = 'upcoming' LIMIT 1)
+    THEN net.http_post(
+      url => '{{APP_URL}}/api/cron/notify-appointments',
+      headers => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
+      body => '{}'::jsonb,
+      timeout_milliseconds => 60000
+    ) ELSE NULL END$$
 );

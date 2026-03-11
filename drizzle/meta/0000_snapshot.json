@@ -111,12 +111,8 @@
           "tableFrom": "account",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -204,12 +200,8 @@
           "tableFrom": "session",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -219,9 +211,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -323,9 +313,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -460,12 +448,8 @@
           "tableFrom": "chat_conversation",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -591,12 +575,8 @@
           "tableFrom": "chat_message",
           "tableTo": "chat_conversation",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conversation_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -667,12 +647,8 @@
           "tableFrom": "aadhaar_details",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -682,9 +658,7 @@
         "aadhaar_details_user_id_unique": {
           "name": "aadhaar_details_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -769,12 +743,8 @@
           "tableFrom": "address_details",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -784,9 +754,7 @@
         "address_details_user_id_unique": {
           "name": "address_details_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -915,12 +883,8 @@
           "tableFrom": "appointment",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1050,12 +1014,8 @@
           "tableFrom": "document_file",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1064,12 +1024,8 @@
           "tableFrom": "document_file",
           "tableTo": "document_folder",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "folder_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["folder_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1153,12 +1109,8 @@
           "tableFrom": "document_folder",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1254,12 +1206,8 @@
           "tableFrom": "emergency_contact",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1348,12 +1296,8 @@
           "tableFrom": "health_metric",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1439,12 +1383,8 @@
           "tableFrom": "medical_information",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1454,9 +1394,7 @@
         "medical_information_user_id_unique": {
           "name": "medical_information_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -1567,12 +1505,8 @@
           "tableFrom": "medical_record",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1708,12 +1642,8 @@
           "tableFrom": "qr_code",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1723,9 +1653,7 @@
         "qr_code_user_id_unique": {
           "name": "qr_code_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -1837,12 +1765,8 @@
           "tableFrom": "reminder",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1921,12 +1845,8 @@
           "tableFrom": "user_storage",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1936,9 +1856,7 @@
         "user_storage_user_id_unique": {
           "name": "user_storage_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -2092,12 +2010,8 @@
           "tableFrom": "notification_log",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2176,12 +2090,8 @@
           "tableFrom": "user_notification_settings",
           "tableTo": "user",
           "schemaTo": "medisync",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2191,9 +2101,7 @@
         "user_notification_settings_user_id_unique": {
           "name": "user_notification_settings_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -2205,10 +2113,7 @@
     "medisync.feedback_type": {
       "name": "feedback_type",
       "schema": "medisync",
-      "values": [
-        "LIKED",
-        "DISLIKED"
-      ]
+      "values": ["LIKED", "DISLIKED"]
     }
   },
   "schemas": {
