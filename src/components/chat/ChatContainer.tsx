@@ -24,6 +24,13 @@ function extractText(
     .join( '' )
 }
 
+/** A message should be saved if it has text content OR tool-call/tool-result parts */
+function shouldSaveMessage( m: { content: string; parts?: Array<Record<string, unknown>> } ): boolean {
+  if ( m.content.trim().length > 0 ) return true
+  if ( m.parts?.some( ( p ) => p.type === 'tool-call' || p.type === 'tool-result' ) ) return true
+  return false
+}
+
 type TokenUsageInfo = {
   promptTokens?: number
   completionTokens?: number
@@ -193,13 +200,7 @@ export default function ChatContainer( {
     // Reset usage for next turn
     lastUsageRef.current = {}
 
-    // Keep messages that have text content OR tool-call parts (so tool calls get saved)
-    const rows = toSave.filter( ( m ) => {
-      if ( m.content.trim().length > 0 ) return true
-      // Also keep if parts contain tool-call data
-      if ( m.parts && m.parts.some( ( p ) => p.type === 'tool-call' || p.type === 'tool-result' ) ) return true
-      return false
-    } )
+    const rows = toSave.filter( shouldSaveMessage )
     if ( rows.length > 0 ) {
       saveMessages( {
         data: { conversationId: conversationId, messages: rows },

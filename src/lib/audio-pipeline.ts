@@ -1,5 +1,8 @@
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1'
 
+/** Max characters of transcript sent to tone analysis to keep within model context limits */
+const MAX_TONE_ANALYSIS_LENGTH = 2000
+
 function getApiKey(): string {
   const key = process.env.GROQ_API_KEY
   if ( !key ) throw new Error( 'GROQ_API_KEY not configured' )
@@ -42,7 +45,7 @@ export async function transcribeAudio( audioFile: File ): Promise<string> {
 export async function analyzeTone( transcript: string ): Promise<ToneAnalysis> {
   const prompt = `Analyze the emotional tone of this spoken transcript. Rate each emotion from 0.0 to 1.0. Return ONLY valid JSON, no markdown.
 
-Transcript: """${transcript.slice( 0, 2000 )}"""
+Transcript: """${transcript.slice( 0, MAX_TONE_ANALYSIS_LENGTH )}"""
 
 Return JSON:
 {"happiness":0.0,"sadness":0.0,"anger":0.0,"anxiety":0.0,"calmness":0.0,"urgency":0.0,"overallMood":"neutral"}`

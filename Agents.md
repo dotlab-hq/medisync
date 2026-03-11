@@ -112,3 +112,21 @@
 **Problem:** `documents.tsx` was 637 lines — far over the 250-line limit and hard to maintain.
 
 **Fix:** Split into 8 files: route (208), skeleton (43), upload dialog (165), upload hook (142), folder sidebar (127), document grid (151), folder dialogs (157), tagify input (42). All under 250 lines.
+
+### Transcribed text not appearing in chat input
+
+**Problem:** `RecordingInterface` called `onTranscribed(text)` BEFORE `setIsRecording(false)`. Since the textarea only renders when `isRecording === false`, `textareaRef.current` was null when `handleTranscribed` tried to set its value. The entire handler was silently skipped.
+
+**Fix:** Changed `handleTranscribed` to update only the zustand store via `useChatTextareaStore.getState().text` + `setText()`. The textarea reads from the store on render, so when `isRecording` flips to `false` and the textarea mounts, it immediately shows the transcribed text. Also added height adjustment in the `useChatTextarea` hook's store-sync effect.
+
+### Chat state management: URL vs zustand store conflict
+
+**Problem:** `ChatContainer` used `effectiveConvId = initialChatId ?? activeConversationId` where `activeConversationId` came from zustand. This caused stale/conflicting states when navigating between chats — the store value could persist across route changes and interfere with URL-based navigation.
+
+**Fix:** Replaced with local `useState(initialChatId ?? null)`. The zustand store's `activeConversationId` is now only used for sidebar highlighting, not for determining which conversation to load or save messages to. URL (via `initialChatId` prop) is the single source of truth.
+
+### Tool call data not saved to DB
+
+**Problem:** The save-messages effect filtered with `m.content.trim().length > 0`, which dropped assistant messages that were purely tool-call results with no text content. Tool call data in `parts` was lost.
+
+**Fix:** Extended the filter to also keep messages where `parts` contain `tool-call` or `tool-result` type entries, even if text content is empty.

@@ -92,7 +92,8 @@ export default function ChatInput({
 
   const handleTranscribed = useCallback(
     (transcribedText: string) => {
-      // Compute the new value by appending transcribed text
+      // Read latest store value directly — this callback fires while textarea
+      // is unmounted (recording still active), so React hook state may be stale
       const current = useChatTextareaStore.getState().text
       const newValue = current ? `${current} ${transcribedText}` : transcribedText
       // Update store — textarea will pick up the new value via useChatTextarea hook
