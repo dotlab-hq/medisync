@@ -10,12 +10,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { useChatStore } from './chat-store'
 
@@ -103,85 +97,77 @@ export default function ChatSidebar( {
 
       {/* List */}
       <ScrollArea className="flex-1">
-        <TooltipProvider delayDuration={600}>
-          <div ref={scrollContainerRef} className="px-2 py-2 space-y-0.5">
-            {isLoading ? (
-              Array.from( { length: 5 } ).map( ( _, i ) => (
-                <Skeleton key={i} className="h-9 w-full rounded-md" />
-              ) )
-            ) : conversations.length === 0 ? (
-              <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-                No conversations yet
-              </p>
-            ) : (
-              <>
-                {conversations.map( ( c ) => (
-                  <div
-                    key={c.id}
+        <div ref={scrollContainerRef} className="px-2 py-2 space-y-0.5">
+          {isLoading ? (
+            Array.from( { length: 5 } ).map( ( _, i ) => (
+              <Skeleton key={i} className="h-9 w-full rounded-md" />
+            ) )
+          ) : conversations.length === 0 ? (
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+              No conversations yet
+            </p>
+          ) : (
+            <>
+              {conversations.map( ( c ) => (
+                <div
+                  key={c.id}
+                  className={cn(
+                    'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors',
+                    'hover:bg-primary/10',
+                    activeConversationId === c.id &&
+                    'bg-primary/10 font-medium text-primary',
+                  )}
+                  onClick={() => onSelect( c.id )}
+                >
+                  <MessageSquare
                     className={cn(
-                      'group flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors',
-                      'hover:bg-primary/10',
-                      activeConversationId === c.id &&
-                      'bg-primary/10 font-medium text-primary',
+                      'h-3.5 w-3.5 shrink-0',
+                      activeConversationId === c.id
+                        ? 'text-primary'
+                        : 'text-muted-foreground',
                     )}
-                    onClick={() => onSelect( c.id )}
+                  />
+                  {/* min-w-0 is critical: allows flex child to shrink below its content size and truncate */}
+                  <span className="flex-1 truncate select-none min-w-0 leading-snug">
+                    {c.title}
+                  </span>
+                  {/* Trash: always occupies space; dim at rest, full on hover */}
+                  <button
+                    className={cn(
+                      'shrink-0 flex items-center justify-center rounded p-0.5',
+                      'opacity-30 group-hover:opacity-100 transition-opacity',
+                      'hover:bg-destructive/10 hover:text-destructive text-muted-foreground',
+                    )}
+                    onClick={( e ) => {
+                      e.stopPropagation()
+                      onDelete( c.id )
+                    }}
+                    title="Delete chat"
+                    tabIndex={-1}
                   >
-                    <MessageSquare
-                      className={cn(
-                        'h-3.5 w-3.5 shrink-0',
-                        activeConversationId === c.id
-                          ? 'text-primary'
-                          : 'text-muted-foreground',
-                      )}
-                    />
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="flex-1 truncate select-none min-w-0">
-                          {c.title}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="max-w-56 wrap-break-word">
-                        {c.title}
-                      </TooltipContent>
-                    </Tooltip>
-                    {/* Always render trash to reserve space — CSS opacity hides it */}
-                    <button
-                      className={cn(
-                        'shrink-0 flex items-center justify-center rounded p-0.5',
-                        'opacity-0 group-hover:opacity-100 transition-opacity',
-                        'hover:bg-destructive/10 hover:text-destructive text-muted-foreground',
-                      )}
-                      onClick={( e ) => {
-                        e.stopPropagation()
-                        onDelete( c.id )
-                      }}
-                      title="Delete chat"
-                      tabIndex={-1}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ) )}
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) )}
 
-                {/* Load More Trigger */}
-                {hasMore && (
-                  <div ref={loadMoreTriggerRef} className="py-2 text-center">
-                    {loadingMore ? (
-                      <Loader2 className="h-4 w-4 animate-spin mx-auto text-muted-foreground" />
-                    ) : null}
-                  </div>
-                )}
+              {/* Load More Trigger */}
+              {hasMore && (
+                <div ref={loadMoreTriggerRef} className="py-2 text-center">
+                  {loadingMore ? (
+                    <Loader2 className="h-4 w-4 animate-spin mx-auto text-muted-foreground" />
+                  ) : null}
+                </div>
+              )}
 
-                {/* End of List */}
-                {!hasMore && conversations.length > 0 && (
-                  <p className="px-3 py-2 text-center text-xs text-muted-foreground">
-                    No more chats
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-        </TooltipProvider>
+              {/* End of List */}
+              {!hasMore && conversations.length > 0 && (
+                <p className="px-3 py-2 text-center text-xs text-muted-foreground">
+                  No more chats
+                </p>
+              )}
+            </>
+          )}
+        </div>
       </ScrollArea>
     </div>
   )

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Check, Loader2, Mic, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useMicDictateStore } from '../stores/useMicDictate'
-import { transcribeAudio } from '@/server/audio'
 import { toast } from 'sonner'
 
 const BAR_COUNT = 48
@@ -168,15 +167,29 @@ export function RecordingInterface( { onTranscribed }: RecordingInterfaceProps )
 
       try {
         const file = new File( [blob], 'recording.webm', { type: 'audio/webm' } )
-        const result = await transcribeAudio( { data: { audio: file } } )
+        const fd = new FormData()
+        fd.append( 'audio', file )
+
+        const res = await fetch( '/api/chat/transcribe', {
+          method: 'POST',
+          body: fd,
+        } )
+
+        if ( !res.ok ) {
+          const err = await res.json().catch( () => ( {} ) )
+          throw new Error( err.error ?? `HTTP ${res.status}` )
+        }
+
+        const result = await res.json()
         if ( result.text ) {
           onTranscribed( result.text )
           toast.success( 'Transcript appended' )
         } else {
           toast.error( 'No speech detected' )
         }
-      } catch {
-        toast.error( 'Failed to transcribe audio' )
+      } catch ( err ) {
+        const msg = err instanceof Error ? err.message : 'Failed to transcribe audio'
+        toast.error( msg )
       } finally {
         setIsTranscribing( false )
         setIsRecording( false )

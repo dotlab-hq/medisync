@@ -79,45 +79,59 @@ export default function ChatContainer( {
     },
   } )
 
-  // Reset state when switching conversations (but NOT when we just auto-created one)
+  // Helper: fetch a conversation from DB and push its messages into useChat state
+  const loadConversation = useCallback(
+    ( convId: string ) => {
+      getConversation( { data: { id: convId } } )
+        .then( ( conv ) => {
+          const uiMessages = conv.messages.map( ( msg ) => ( {
+            id: msg.id,
+            role: msg.role,
+            parts:
+              msg.parts.length > 0
+                ? msg.parts
+                : [{ type: 'text', text: msg.content }],
+          } ) )
+          setMessages( uiMessages as any )
+          savedMsgIdRef.current = null
+        } )
+        .catch( ( err ) => {
+          console.error( 'Failed to load conversation:', err )
+        } )
+    },
+    [setMessages],
+  )
+
+  // Effect 1: URL / prop-driven load — fires when a chatId arrives via props
+  // (chat.$chatId.tsx passes initialChatId; component is remounted with key={chatId},
+  //  so this fires exactly once per chat on mount).
   useEffect( () => {
+    if ( !initialChatId ) return
+    // Sync store so sidebar highlights the right item
+    setActiveConversation( initialChatId )
+    loadConversation( initialChatId )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialChatId] ) // intentionally omitting setActiveConversation/loadConversation to avoid re-trigger
+
+  // Effect 2: In-app conversation switch (sidebar click with no page navigation)
+  // Only runs when activeConversationId changes AND we don't have an initialChatId.
+  useEffect( () => {
+    if ( initialChatId ) return // handled by Effect 1 above
+
     if ( skipNextResetRef.current ) {
+      // Skip exactly ONE re-run triggered by the new-conversation flow in handleSend
       skipNextResetRef.current = false
       return
     }
 
-    // Clear messages when no conversation is active
-    if ( !effectiveConvId ) {
+    if ( !activeConversationId ) {
       setMessages( [] )
       savedMsgIdRef.current = null
       return
     }
 
-    // Sync the store if we were given an initialChatId that differs from store
-    if ( initialChatId && initialChatId !== activeConversationId ) {
-      setActiveConversation( initialChatId )
-    }
-
-    // Load conversation messages from DB
-    getConversation( { data: { id: effectiveConvId } } )
-      .then( ( conv ) => {
-        // Convert database messages to UI format
-        const uiMessages = conv.messages.map( ( msg ) => ( {
-          id: msg.id,
-          role: msg.role,
-          parts:
-            msg.parts.length > 0
-              ? msg.parts
-              : [{ type: 'text', text: msg.content }],
-        } ) )
-        setMessages( uiMessages as any )
-        savedMsgIdRef.current = null
-      } )
-      .catch( ( err ) => {
-        console.error( 'Failed to load conversation:', err )
-        setMessages( [] )
-      } )
-  }, [effectiveConvId, initialChatId, activeConversationId, setMessages, setActiveConversation] )
+    loadConversation( activeConversationId )
+  }, [activeConversationId, initialChatId, loadConversation, setMessages] )
 
   // ── Auto-retitle (separate Groq call, best-effort) ─────────────────
   const autoRetitle = useCallback(

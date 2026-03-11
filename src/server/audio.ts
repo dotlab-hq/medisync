@@ -20,10 +20,6 @@ const generateAudioSchema = z.object( {
     content: z.string().min( 1 ),
 } )
 
-const transcribeAudioSchema = z.object( {
-    audio: z.instanceof( File ),
-} )
-
 // ── Generate and cache TTS audio ─────────────────────────────────────
 export const generateMessageAudio = createServerFn( { method: 'POST' } )
     .inputValidator( ( data: unknown ) => generateAudioSchema.parse( data ) )
@@ -67,44 +63,8 @@ export const generateMessageAudio = createServerFn( { method: 'POST' } )
         return { audioUrl, cached: false }
     } )
 
-// ── Transcribe audio using Groq Whisper ─────────────────────────────
-export const transcribeAudio = createServerFn( { method: 'POST' } )
-    .inputValidator( ( data: unknown ) => transcribeAudioSchema.parse( data ) )
-    .handler( async ( { data } ) => {
-        await getSession()
-
-        const GROQ_API_KEY = process.env.GROQ_API_KEY
-        if ( !GROQ_API_KEY ) {
-            throw new Error( 'GROQ_API_KEY not configured' )
-        }
-
-        try {
-            const formData = new FormData()
-            formData.append( 'file', data.audio )
-            formData.append( 'model', 'whisper-large-v3-turbo' )
-
-            const response = await fetch(
-                'https://api.groq.com/openai/v1/audio/transcriptions',
-                {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${GROQ_API_KEY}`,
-                    },
-                    body: formData,
-                },
-            )
-
-            if ( !response.ok ) {
-                throw new Error( `Groq API error: ${response.statusText}` )
-            }
-
-            const result = await response.json()
-            return { text: result.text }
-        } catch ( error ) {
-            console.error( 'Error transcribing audio:', error )
-            throw new Error( 'Failed to transcribe audio' )
-        }
-    } )
+// Note: Audio transcription is handled by the /api/chat/transcribe route
+// which accepts FormData with an audio File (see src/routes/api/chat/transcribe.ts)
 
 // ── Get cached audio URL ─────────────────────────────────────────────
 export const getMessageAudio = createServerFn( { method: 'GET' } )
