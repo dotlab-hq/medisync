@@ -91,20 +91,16 @@ export default function ChatInput({
   )
 
   const handleTranscribed = useCallback(
-    (text: string) => {
-      if (textareaRef.current) {
-        const newValue = value ? `${value} ${text}` : text
-        textareaRef.current.value = newValue
-        setText(newValue)
-
-        // Manually trigger height adjustment
-        textareaRef.current.style.height = 'auto'
-        const scrollHeight = textareaRef.current.scrollHeight
-        const maxHeight = lineHeight * 7 // maxLines
-        textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`
-      }
+    (transcribedText: string) => {
+      // Read latest store value directly — this callback fires while textarea
+      // is unmounted (recording still active), so React hook state may be stale
+      const current = useChatTextareaStore.getState().text
+      const newValue = current ? `${current} ${transcribedText}` : transcribedText
+      // Update store — textarea will pick up the new value via useChatTextarea hook
+      // when it re-renders after recording interface closes (isRecording → false)
+      setText(newValue)
     },
-    [value, textareaRef, setText, lineHeight],
+    [setText],
   )
 
   return (
