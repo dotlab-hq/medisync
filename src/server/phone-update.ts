@@ -17,7 +17,7 @@ export const sendPhoneChangeOtp = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
 
     // Check the new number is not already in use by another account
     const existing = await db.query.user.findFirst( {
@@ -45,7 +45,7 @@ export const verifyAndUpdatePhone = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
 
     const result = await verifyOtp( data.newPhone, data.code )
     if ( !result.valid ) throw new Error( result.message )

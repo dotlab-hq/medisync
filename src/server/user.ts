@@ -17,7 +17,7 @@ export const getUserProfile = createServerFn( { method: 'GET' } ).handler(
   async () => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const result = await db.query.user.findFirst( {
@@ -63,7 +63,7 @@ export const updateUser = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const updateData: Record<string, unknown> = {}
@@ -98,7 +98,7 @@ export const upsertAddress = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const existing = await db.query.addressDetails.findFirst( {
@@ -131,7 +131,7 @@ export const upsertAadhaar = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const existing = await db.query.aadhaarDetails.findFirst( {
@@ -166,7 +166,7 @@ export const upsertMedicalInfo = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const existing = await db.query.medicalInformation.findFirst( {
@@ -203,7 +203,7 @@ export const addEmergencyContact = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const [created] = await db
@@ -218,7 +218,7 @@ export const deleteEmergencyContact = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
 
     await db
       .delete( emergencyContact )

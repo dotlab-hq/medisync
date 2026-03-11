@@ -12,7 +12,7 @@ export const getNotificationSettings = createServerFn( {
 } ).handler( async () => {
   const request = getRequest()
   const sessionData = await auth.api.getSession( { headers: request.headers } )
-  if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+  if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
   const userId = sessionData.user.id
 
   const existing = await db.query.userNotificationSettings.findFirst( {
@@ -40,7 +40,7 @@ export const updateNotificationSettings = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const existing = await db.query.userNotificationSettings.findFirst( {

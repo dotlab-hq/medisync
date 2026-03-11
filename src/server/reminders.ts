@@ -12,7 +12,7 @@ export const listReminders = createServerFn( { method: 'GET' } ).handler(
   async () => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     return db.query.reminder.findMany( {
@@ -38,7 +38,7 @@ export const createReminder = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     // Prefer timezone from client (browser-detected); fall back to profile timezone
@@ -70,7 +70,7 @@ export const toggleReminder = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const [updated] = await db
@@ -89,7 +89,7 @@ export const deleteReminder = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     await db

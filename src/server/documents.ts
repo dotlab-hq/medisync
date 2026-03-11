@@ -59,7 +59,7 @@ export const getUserStorage = createServerFn( { method: 'GET' } ).handler(
   async () => {
     const request = getRequest()
     const session = await auth.api.getSession( { headers: request.headers } )
-    if ( !session?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !session?.user.id ) throw new Error( 'Unauthorized' )
     return ensureStorage( session.user.id )
   },
 )

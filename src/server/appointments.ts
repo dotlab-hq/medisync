@@ -41,7 +41,7 @@ export const createAppointment = createServerFn( { method: 'POST' } )
     .handler( async ( { data } ) => {
         const request = getRequest()
         const sessionData = await auth.api.getSession( { headers: request.headers } )
-        if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+        if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
         const userId = sessionData.user.id
 
         // Prefer timezone from client (browser-detected); fall back to profile timezone
@@ -85,7 +85,7 @@ export const updateAppointment = createServerFn( { method: 'POST' } )
     .handler( async ( { data } ) => {
         const request = getRequest()
         const sessionData = await auth.api.getSession( { headers: request.headers } )
-        if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+        if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
         const userId = sessionData.user.id
 
         const { id, timezone: clientTz, ...updateData } = data

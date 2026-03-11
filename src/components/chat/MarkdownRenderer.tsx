@@ -1,4 +1,4 @@
-import { Streamdown } from 'streamdown'
+import ReactMarkdown from 'react-markdown'
 import { cn } from '@/lib/utils'
 
 import remarkMath from 'remark-math'
@@ -14,10 +14,10 @@ type MarkdownRendererProps = {
   className?: string
 }
 
-export default function MarkdownRenderer({
+export default function MarkdownRenderer( {
   content,
   className,
-}: MarkdownRendererProps) {
+}: MarkdownRendererProps ) {
   return (
     <div
       className={cn(
@@ -67,13 +67,12 @@ export default function MarkdownRenderer({
         className,
       )}
     >
-      <Streamdown
-        mode="static"
+      <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
       >
         {content}
-      </Streamdown>
+      </ReactMarkdown>
     </div>
   )
 }

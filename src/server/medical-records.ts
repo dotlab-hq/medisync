@@ -11,7 +11,7 @@ export const listMedicalRecords = createServerFn( { method: 'GET' } ).handler(
   async () => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     return db.query.medicalRecord.findMany( {
@@ -27,7 +27,7 @@ export const getMedicalRecord = createServerFn( { method: 'GET' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const record = await db.query.medicalRecord.findFirst( {
@@ -58,7 +58,7 @@ export const createMedicalRecord = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const [created] = await db
@@ -90,7 +90,7 @@ export const updateMedicalRecord = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const { id, ...updateData } = data
@@ -115,7 +115,7 @@ export const deleteMedicalRecord = createServerFn( { method: 'POST' } )
   .handler( async ( { data } ) => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     await db

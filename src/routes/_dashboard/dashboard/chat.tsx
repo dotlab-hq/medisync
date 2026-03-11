@@ -14,6 +14,16 @@ type ConversationItem = {
   updatedAt: Date | string
 }
 
+function mergeUniqueConversations(
+  existing: ConversationItem[],
+  incoming: ConversationItem[],
+) {
+  const map = new Map<string, ConversationItem>()
+  for (const item of existing) map.set(item.id, item)
+  for (const item of incoming) map.set(item.id, item)
+  return Array.from(map.values())
+}
+
 export const Route = createFileRoute('/_dashboard/dashboard/chat')({
   component: ChatPage,
 })
@@ -36,7 +46,7 @@ function ChatPage() {
           const serverIds = new Set(result.items.map((c) => c.id))
           // Keep any optimistically-added items not yet returned by the server
           const optimistic = prev.filter((c) => !serverIds.has(c.id))
-          return [...optimistic, ...result.items]
+          return mergeUniqueConversations(optimistic, result.items)
         })
         setNextCursor(result.nextCursor)
         setHasMore(result.hasMore)
@@ -53,7 +63,7 @@ function ChatPage() {
       const result = await listConversations({
         data: { cursor: nextCursor, limit: 10 },
       })
-      setConversations((prev) => [...prev, ...result.items])
+      setConversations((prev) => mergeUniqueConversations(prev, result.items))
       setNextCursor(result.nextCursor)
       setHasMore(result.hasMore)
     } catch (err) {

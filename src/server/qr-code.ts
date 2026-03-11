@@ -11,7 +11,7 @@ export const getOrCreateQrCode = createServerFn( { method: 'GET' } ).handler(
   async () => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     const existing = await db.query.qrCode.findFirst( {
@@ -43,7 +43,7 @@ export const regenerateQrCode = createServerFn( { method: 'POST' } ).handler(
   async () => {
     const request = getRequest()
     const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user?.id ) throw new Error( 'Unauthorized' )
+    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
     const userId = sessionData.user.id
 
     // Delete old QR code so old URLs become invalid

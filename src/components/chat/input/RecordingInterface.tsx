@@ -1,190 +1,256 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, Loader2, Mic, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useMicDictateStore } from '../stores/useMicDictate'
 import { transcribeAudio } from '@/server/audio'
 import { toast } from 'sonner'
 
+const BAR_COUNT = 48
+const BAR_GAP = 2
+const WAVEFORM_COLOR = '#3ab795' // Mint Leaf
+
 interface RecordingInterfaceProps {
-  onTranscribed: (text: string) => void
+  onTranscribed: ( text: string ) => void
 }
 
-export function RecordingInterface({ onTranscribed }: RecordingInterfaceProps) {
+export function RecordingInterface( { onTranscribed }: RecordingInterfaceProps ) {
   const { isRecording, setIsRecording, setRecordedBlob } = useMicDictateStore()
-  const [stream, setStream] = useState<MediaStream | null>(null)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
+  const [isTranscribing, setIsTranscribing] = useState( false )
+  const [recordingSeconds, setRecordingSeconds] = useState( 0 )
 
-  // Request microphone access
-  useEffect(() => {
-    if (!isRecording) return
+  const streamRef = useRef<MediaStream | null>( null )
+  const mediaRecorderRef = useRef<MediaRecorder | null>( null )
+  const audioChunksRef = useRef<Blob[]>( [] )
 
-    const requestMic = async () => {
+  const audioCtxRef = useRef<AudioContext | null>( null )
+  const analyserRef = useRef<AnalyserNode | null>( null )
+  const animFrameRef = useRef<number>( 0 )
+  const canvasRef = useRef<HTMLCanvasElement>( null )
+
+  // Draw live waveform every animation frame
+  const drawWaveform = useCallback( () => {
+    const canvas = canvasRef.current
+    const analyser = analyserRef.current
+    if ( !canvas || !analyser ) return
+
+    const ctx = canvas.getContext( '2d' )
+    if ( !ctx ) return
+
+    const W = canvas.width
+    const H = canvas.height
+
+    const bufferLength = analyser.frequencyBinCount
+    const dataArray = new Uint8Array( bufferLength )
+    analyser.getByteFrequencyData( dataArray )
+
+    ctx.clearRect( 0, 0, W, H )
+
+    const totalBarWidth = ( W - BAR_GAP * ( BAR_COUNT - 1 ) ) / BAR_COUNT
+    const barW = Math.max( totalBarWidth, 2 )
+    const radius = barW / 2
+
+    for ( let i = 0; i < BAR_COUNT; i++ ) {
+      // Sample evenly across lower 60% of spectrum (most voice energy)
+      const dataIndex = Math.floor( ( i / BAR_COUNT ) * ( bufferLength * 0.6 ) )
+      const magnitude = dataArray[dataIndex] / 255
+
+      // Minimum idle height = 3px so bars are always visible
+      const halfH = ( H / 2 - 4 ) * magnitude + 3
+
+      const x = i * ( barW + BAR_GAP )
+      const centerY = H / 2
+
+      ctx.fillStyle = WAVEFORM_COLOR
+      ctx.globalAlpha = 0.6 + magnitude * 0.4
+
+      // Top half
+      ctx.beginPath()
+      ctx.roundRect( x, centerY - halfH, barW, halfH, [radius, radius, 0, 0] )
+      ctx.fill()
+
+      // Bottom half (mirrored)
+      ctx.beginPath()
+      ctx.roundRect( x, centerY, barW, halfH, [0, 0, radius, radius] )
+      ctx.fill()
+    }
+
+    ctx.globalAlpha = 1
+    animFrameRef.current = requestAnimationFrame( drawWaveform )
+  }, [] )
+
+  // Request mic, set up AudioContext + MediaRecorder
+  useEffect( () => {
+    if ( !isRecording ) return
+    let cancelled = false
+
+    const start = async () => {
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
+        const mediaStream = await navigator.mediaDevices.getUserMedia( {
           audio: true,
-        })
-        setStream(mediaStream)
+        } )
+        if ( cancelled ) {
+          mediaStream.getTracks().forEach( ( t ) => t.stop() )
+          return
+        }
 
-        // Setup media recorder
-        const mediaRecorder = new MediaRecorder(mediaStream)
-        mediaRecorderRef.current = mediaRecorder
+        streamRef.current = mediaStream
+
+        // AudioContext for waveform
+        const audioCtx = new AudioContext()
+        const analyser = audioCtx.createAnalyser()
+        analyser.fftSize = 256
+        analyser.smoothingTimeConstant = 0.8
+        audioCtx.createMediaStreamSource( mediaStream ).connect( analyser )
+        audioCtxRef.current = audioCtx
+        analyserRef.current = analyser
+        animFrameRef.current = requestAnimationFrame( drawWaveform )
+
+        // MediaRecorder
+        const mr = new MediaRecorder( mediaStream )
+        mediaRecorderRef.current = mr
         audioChunksRef.current = []
-
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            audioChunksRef.current.push(e.data)
-          }
+        mr.ondataavailable = ( e ) => {
+          if ( e.data.size > 0 ) audioChunksRef.current.push( e.data )
         }
-
-        mediaRecorder.start()
-      } catch (error) {
-        console.error('Error accessing microphone:', error)
-        toast.error('Failed to access microphone')
-        setIsRecording(false)
+        mr.start()
+      } catch {
+        if ( !cancelled ) {
+          toast.error( 'Failed to access microphone' )
+          setIsRecording( false )
+        }
       }
     }
 
-    requestMic()
-
+    start()
     return () => {
-      // Cleanup on unmount
-      if (mediaRecorderRef.current?.state === 'recording') {
-        mediaRecorderRef.current.stop()
-      }
-      cleanupMic()
+      cancelled = true
     }
-  }, [isRecording, setIsRecording])
+  }, [isRecording, setIsRecording, drawWaveform] )
 
-  // Handle saving the recording
-  const handleSave = useCallback(async () => {
-    try {
-      if (
-        !mediaRecorderRef.current ||
-        mediaRecorderRef.current.state === 'inactive'
-      ) {
-        return
-      }
+  // Recording timer
+  useEffect( () => {
+    if ( !isRecording ) {
+      setRecordingSeconds( 0 )
+      return
+    }
+    const id = setInterval( () => setRecordingSeconds( ( s ) => s + 1 ), 1000 )
+    return () => clearInterval( id )
+  }, [isRecording] )
 
-      mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        setRecordedBlob(blob)
+  const cleanupAll = useCallback( () => {
+    cancelAnimationFrame( animFrameRef.current )
+    analyserRef.current?.disconnect()
+    audioCtxRef.current?.close().catch( () => { } )
+    audioCtxRef.current = null
+    analyserRef.current = null
+    streamRef.current?.getTracks().forEach( ( t ) => t.stop() )
+    streamRef.current = null
+    mediaRecorderRef.current = null
+    audioChunksRef.current = []
+  }, [] )
 
-        // Transcribe using Groq Whisper
-        try {
-          const audioFile = new File([blob], 'recording.webm', {
-            type: 'audio/webm',
-          })
-          const result = await transcribeAudio({ data: { audio: audioFile } })
+  useEffect( () => () => cleanupAll(), [cleanupAll] )
 
-          if (result.text) {
-            onTranscribed(result.text)
-            toast.success('Voice transcribed')
-          }
-        } catch (error) {
-          console.error('Transcription error:', error)
-          toast.error('Failed to transcribe audio')
+  const formatTime = ( s: number ) =>
+    `${Math.floor( s / 60 )}:${String( s % 60 ).padStart( 2, '0' )}`
+
+  // Stop recording → transcribe → append text
+  const handleSave = useCallback( () => {
+    const mr = mediaRecorderRef.current
+    if ( !mr || mr.state === 'inactive' ) return
+
+    mr.onstop = async () => {
+      const blob = new Blob( audioChunksRef.current, { type: 'audio/webm' } )
+      setRecordedBlob( blob )
+
+      cancelAnimationFrame( animFrameRef.current )
+      setIsTranscribing( true )
+
+      try {
+        const file = new File( [blob], 'recording.webm', { type: 'audio/webm' } )
+        const result = await transcribeAudio( { data: { audio: file } } )
+        if ( result.text ) {
+          onTranscribed( result.text )
+          toast.success( 'Transcript appended' )
+        } else {
+          toast.error( 'No speech detected' )
         }
-
-        setIsRecording(false)
-        cleanupMic()
+      } catch {
+        toast.error( 'Failed to transcribe audio' )
+      } finally {
+        setIsTranscribing( false )
+        setIsRecording( false )
+        cleanupAll()
       }
+    }
 
+    // Stop mic tracks so browser recording indicator disappears
+    streamRef.current?.getTracks().forEach( ( t ) => t.stop() )
+    mr.stop()
+  }, [setRecordedBlob, setIsRecording, onTranscribed, cleanupAll] )
+
+  const handleDiscard = useCallback( () => {
+    if ( mediaRecorderRef.current?.state === 'recording' ) {
       mediaRecorderRef.current.stop()
-    } catch (error) {
-      console.error('Error saving recording:', error)
-      toast.error('Failed to save recording')
-      setIsRecording(false)
-      cleanupMic()
     }
-  }, [setRecordedBlob, setIsRecording, onTranscribed])
+    cleanupAll()
+    setRecordedBlob( null )
+    setIsRecording( false )
+  }, [setIsRecording, setRecordedBlob, cleanupAll] )
 
-  // Handle discarding the recording
-  const handleDiscard = useCallback(() => {
-    try {
-      if (mediaRecorderRef.current?.state === 'recording') {
-        mediaRecorderRef.current.stop()
-      }
-      setIsRecording(false)
-      setRecordedBlob(null)
-      audioChunksRef.current = []
-      cleanupMic()
-    } catch (error) {
-      console.error('Error discarding recording:', error)
-    }
-  }, [setIsRecording, setRecordedBlob])
-
-  // Cleanup microphone resources
-  const cleanupMic = useCallback(() => {
-    try {
-      // Stop all tracks in the media recorder's stream if it exists
-      if (mediaRecorderRef.current?.stream) {
-        mediaRecorderRef.current.stream
-          .getTracks()
-          .forEach((track: MediaStreamTrack) => {
-            track.stop()
-          })
-      }
-      // Also stop tracks from state stream if it exists
-      if (stream) {
-        stream.getTracks().forEach((track: MediaStreamTrack) => {
-          track.stop()
-        })
-      }
-      setStream(null)
-      mediaRecorderRef.current = null
-    } catch (error) {
-      console.error('Error cleaning up microphone:', error)
-    }
-  }, [stream])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (isRecording) {
-        try {
-          if (mediaRecorderRef.current?.state === 'recording') {
-            mediaRecorderRef.current.stop()
-          }
-        } catch (error) {
-          console.error('Error stopping recorder:', error)
-        }
-      }
-      cleanupMic()
-    }
-  }, [isRecording, cleanupMic])
-
-  if (!isRecording) return null
+  if ( !isRecording && !isTranscribing ) return null
 
   return (
-    <div className="flex items-center gap-3 w-full">
+    <div className="flex items-center gap-2 w-full">
+      {/* Discard */}
       <button
         onClick={handleDiscard}
+        disabled={isTranscribing}
         className={cn(
-          'shrink-0 p-2 hover:bg-muted rounded-full transition-colors',
-          'text-muted-foreground hover:text-destructive',
+          'shrink-0 flex items-center justify-center h-8 w-8 rounded-full transition-colors',
+          'text-muted-foreground hover:text-destructive hover:bg-destructive/10',
+          isTranscribing && 'opacity-40 cursor-not-allowed',
         )}
         aria-label="Discard recording"
       >
-        <X className="h-5 w-5" />
+        <X className="h-4 w-4" />
       </button>
 
-      <div className="flex-1 min-w-0 h-12 bg-muted/30 px-3 flex items-center justify-center overflow-hidden rounded-lg">
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-sm text-red-500 font-medium">Recording...</span>
-        </div>
+      {/* Waveform / transcribing indicator */}
+      <div className="flex-1 min-w-0 h-12 rounded-xl bg-muted/40 flex items-center overflow-hidden px-3 gap-2">
+        {isTranscribing ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+            <span className="text-sm text-muted-foreground">Transcribing…</span>
+          </>
+        ) : (
+          <>
+            <Mic className="h-3.5 w-3.5 shrink-0 text-red-500 animate-pulse" />
+            <canvas
+              ref={canvasRef}
+              width={280}
+              height={40}
+              className="flex-1 min-w-0 h-10"
+            />
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground select-none w-10 text-right">
+              {formatTime( recordingSeconds )}
+            </span>
+          </>
+        )}
       </div>
 
+      {/* Confirm / transcribe */}
       <button
         onClick={handleSave}
+        disabled={isTranscribing}
         className={cn(
-          'shrink-0 p-2 hover:bg-muted rounded-full transition-colors',
-          'text-primary hover:text-primary/80',
+          'shrink-0 flex items-center justify-center h-8 w-8 rounded-full transition-colors',
+          'text-primary hover:bg-primary/10',
+          isTranscribing && 'opacity-40 cursor-not-allowed',
         )}
-        aria-label="Save recording"
+        aria-label="Transcribe and append"
       >
-        <Check className="h-5 w-5" />
+        <Check className="h-4 w-4" />
       </button>
     </div>
   )

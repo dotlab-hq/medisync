@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { Bot, User } from 'lucide-react'
+import { Bot, User, Check, X, Pill, Calendar, AlertTriangle } from 'lucide-react'
 import ReasoningBlock from './ReasoningBlock'
 import MarkdownRenderer from './MarkdownRenderer'
 import MessageActions from './MessageActions'
@@ -18,6 +18,12 @@ type MessagePart = {
   name?: string
   input?: Record<string, unknown>
   output?: Record<string, unknown>
+  state?: string
+  approval?: {
+    id: string
+    needsApproval: boolean
+    approved?: boolean
+  }
 }
 
 type MessageBubbleProps = {
@@ -30,6 +36,7 @@ type MessageBubbleProps = {
   modelUsed?: string | null
   parts: MessagePart[]
   isStreaming?: boolean
+  onToolApproval?: ( response: { id: string; approved: boolean } ) => Promise<void>
 }
 
 function formatFileSize( bytes: number ): string {
@@ -51,6 +58,91 @@ function extractTextFromParts( parts: MessagePart[] ): string {
     .join( '' )
 }
 
+// Maps tool names to friendly labels + icons
+const TOOL_DISPLAY: Record<string, { label: string; icon: typeof Pill; color: string }> = {
+  create_reminder: { label: 'Create Reminder', icon: Pill, color: 'text-blue-500' },
+  update_reminder: { label: 'Update Reminder', icon: Pill, color: 'text-blue-500' },
+  delete_reminder: { label: 'Delete Reminder', icon: Pill, color: 'text-red-500' },
+  create_appointment: { label: 'Create Appointment', icon: Calendar, color: 'text-green-500' },
+  update_appointment: { label: 'Update Appointment', icon: Calendar, color: 'text-green-500' },
+  delete_appointment: { label: 'Delete Appointment', icon: Calendar, color: 'text-red-500' },
+  send_sos_emergency: { label: 'SOS Emergency', icon: AlertTriangle, color: 'text-red-600' },
+}
+
+function ToolApprovalCard( {
+  toolName,
+  input,
+  approvalId,
+  onApproval,
+}: {
+  toolName: string
+  input?: Record<string, unknown>
+  approvalId: string
+  onApproval: ( response: { id: string; approved: boolean } ) => Promise<void>
+} ) {
+  const display = TOOL_DISPLAY[toolName] ?? { label: toolName, icon: Pill, color: 'text-muted-foreground' }
+  const Icon = display.icon
+  const isSos = toolName === 'send_sos_emergency'
+
+  return (
+    <div
+      className={cn(
+        'rounded-xl border px-4 py-3 text-sm animate-in fade-in slide-in-from-bottom-1 duration-200',
+        isSos
+          ? 'border-red-500/40 bg-red-500/5'
+          : 'border-border bg-card',
+      )}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className={cn( 'h-4 w-4', display.color )} />
+        <span className="font-medium">{display.label}</span>
+        <span className="ml-auto rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-600">
+          Needs approval
+        </span>
+      </div>
+
+      {/* Show key input fields */}
+      {input && Object.keys( input ).length > 0 && (
+        <div className="mb-3 space-y-0.5 text-xs text-muted-foreground">
+          {Object.entries( input )
+            .filter( ( [, v] ) => v != null && v !== '' )
+            .slice( 0, 6 )
+            .map( ( [key, value] ) => (
+              <div key={key} className="flex gap-2">
+                <span className="font-medium capitalize">{key.replace( /([A-Z])/g, ' $1' ).trim()}:</span>
+                <span className="truncate">{String( value )}</span>
+              </div>
+            ) )}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => onApproval( { id: approvalId, approved: true } )}
+          className={cn(
+            'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+            isSos
+              ? 'bg-red-600 text-white hover:bg-red-700'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90',
+          )}
+        >
+          <Check className="h-3.5 w-3.5" />
+          {isSos ? 'Send SOS' : 'Approve'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onApproval( { id: approvalId, approved: false } )}
+          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent"
+        >
+          <X className="h-3.5 w-3.5" />
+          Deny
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function MessageBubble( {
   messageId,
   role,
@@ -61,6 +153,7 @@ export default function MessageBubble( {
   modelUsed,
   parts,
   isStreaming = false,
+  onToolApproval,
 }: MessageBubbleProps ) {
   const isUser = role === 'user'
   const isAssistant = role === 'assistant'
@@ -79,6 +172,14 @@ export default function MessageBubble( {
 
   // Collect tool-call parts
   const toolCallParts = parts.filter( ( p ) => p.type === 'tool-call' )
+
+  // Collect tool-call parts awaiting approval
+  const approvalParts = parts.filter(
+    ( p ) =>
+      p.type === 'tool-call' &&
+      p.state === 'approval-requested' &&
+      p.approval?.id,
+  )
 
   return (
     <div
@@ -106,6 +207,21 @@ export default function MessageBubble( {
         {/* Reasoning + tool calls block (assistant only) */}
         {isAssistant && ( resolvedReasoning || toolCallParts.length > 0 ) && (
           <ReasoningBlock reasoning={resolvedReasoning} toolCalls={toolCallParts} />
+        )}
+
+        {/* Tool approval cards */}
+        {isAssistant && approvalParts.length > 0 && onToolApproval && (
+          <div className="flex flex-col gap-2">
+            {approvalParts.map( ( part ) => (
+              <ToolApprovalCard
+                key={part.approval!.id}
+                toolName={part.name ?? 'Unknown tool'}
+                input={part.input}
+                approvalId={part.approval!.id}
+                onApproval={onToolApproval}
+              />
+            ) )}
+          </div>
         )}
 
         {/* Bubble */}

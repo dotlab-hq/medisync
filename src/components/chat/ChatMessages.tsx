@@ -31,17 +31,19 @@ type UIMessage = {
 type ChatMessagesProps = {
   messages: UIMessage[]
   isLoading: boolean
+  onToolApproval?: ( response: { id: string; approved: boolean } ) => Promise<void>
 }
 
-export default function ChatMessages({
+export default function ChatMessages( {
   messages,
   isLoading,
-}: ChatMessagesProps) {
-  const bottomRef = useRef<HTMLDivElement>(null)
+  onToolApproval,
+}: ChatMessagesProps ) {
+  const bottomRef = useRef<HTMLDivElement>( null )
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading])
+  useEffect( () => {
+    bottomRef.current?.scrollIntoView( { behavior: 'smooth' } )
+  }, [messages, isLoading] )
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -52,7 +54,7 @@ export default function ChatMessages({
         </div>
       )}
 
-      {messages.map((msg, index) => {
+      {messages.map( ( msg, index ) => {
         // Only hide actions for the last assistant message if still streaming
         const isLastAssistantMsg =
           msg.role === 'assistant' && index === messages.length - 1 && isLoading
@@ -68,10 +70,9 @@ export default function ChatMessages({
             outputTokens={msg.outputTokens}
             modelUsed={msg.modelUsed}
             parts={msg.parts}
-            isStreaming={isLastAssistantMsg}
-          />
+            isStreaming={isLastAssistantMsg} onToolApproval={onToolApproval} />
         )
-      })}
+      } )}
 
       {isLoading && (
         <div className="flex gap-3 px-4 py-3">

@@ -47,9 +47,9 @@ const messageSchema = z.object( {
   role: z.string().min( 1 ),
   content: z.string(),
   reasoning: z.string().nullish(),
-  parts: z.array( z.record( z.unknown() ) ).optional(),
-  attachments: z.array( z.record( z.unknown() ) ).nullish(),
-  annotations: z.array( z.record( z.unknown() ) ).nullish(),
+  parts: z.array( z.record( z.string(), z.unknown() ) ).optional(),
+  attachments: z.array( z.record( z.string(), z.unknown() ) ).nullish(),
+  annotations: z.array( z.record( z.string(), z.unknown() ) ).nullish(),
   inputTokens: z.number().nullish(),
   outputTokens: z.number().nullish(),
   modelUsed: z.string().nullish(),
@@ -62,8 +62,8 @@ const saveMessagesSchema = z.object( {
 
 const createAndSendSchema = z.object( {
   content: z.string().min( 1 ),
-  parts: z.array( z.record( z.unknown() ) ).optional(),
-  attachments: z.array( z.record( z.unknown() ) ).nullish(),
+  parts: z.array( z.record( z.string(), z.unknown() ) ).optional(),
+  attachments: z.array( z.record( z.string(), z.unknown() ) ).nullish(),
 } )
 
 // ── List conversations (with pagination) ─────────────────────────────
