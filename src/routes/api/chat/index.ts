@@ -199,7 +199,7 @@ export const Route = createFileRoute('/api/chat/')({
 
           const stream = chat({
             adapter: groqChat('openai/gpt-oss-120b'),
-
+            stream: true,
             systemPrompts: [
               SYSTEM_PROMPT,
               SAFEGUARD_PROMPT,
