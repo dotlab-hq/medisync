@@ -39,7 +39,7 @@ export const retitleConversation = createServerFn( { method: 'POST' } )
 
         try {
             const stream = chat( {
-                adapter: groqChat( 'mixtral-8x7b-32768' ),
+                adapter: groqChat( 'llama-3.1-8b-instant' ),
                 systemPrompts: [
                     'Generate a very short title (3-6 words, no quotes) summarizing this conversation. Reply with ONLY the title.',
                 ],
