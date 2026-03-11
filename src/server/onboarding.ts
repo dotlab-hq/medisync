@@ -9,7 +9,7 @@ import {
 } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
-import { getRequest } from '@tanstack/react-start/serverr'
+import { getRequest } from '@tanstack/react-start/server'
 
 const onboardingSchema = z.object( {
   // Step 1 – Personal Info

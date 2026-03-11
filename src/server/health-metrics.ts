@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { healthMetric } from '@/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
-import { getRequest } from '@tanstack/react-start/serverrrrr'
+import { getRequest } from '@tanstack/react-start/server'
 
 // ── List health metrics ──────────────────────────────────────────────
 export const listHealthMetrics = createServerFn( { method: 'GET' } ).handler(
