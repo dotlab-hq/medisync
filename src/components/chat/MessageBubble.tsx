@@ -5,6 +5,7 @@ import MarkdownRenderer from './MarkdownRenderer'
 import MessageActions from './MessageActions'
 
 type Attachment = {
+  documentId?: string
   name: string
   type: string
   size: number
@@ -15,9 +16,15 @@ type MessagePart = {
   type: string
   content?: string
   text?: string
+  source?: {
+    type: string
+    value: string
+    mimeType?: string
+  }
+  metadata?: unknown
   name?: string
-  input?: Record<string, unknown>
-  output?: Record<string, unknown>
+  input?: unknown
+  output?: unknown
   state?: string
   approval?: {
     id: string
@@ -37,6 +44,7 @@ type MessageBubbleProps = {
   parts: MessagePart[]
   isStreaming?: boolean
   onToolApproval?: ( response: { id: string; approved: boolean } ) => Promise<void>
+  onOpenAttachment?: ( attachment: Attachment ) => Promise<void>
 }
 
 function formatFileSize( bytes: number ): string {
@@ -56,6 +64,52 @@ function extractTextFromParts( parts: MessagePart[] ): string {
     .filter( ( p ) => p.type === 'text' )
     .map( ( p ) => p.content || p.text || '' )
     .join( '' )
+}
+
+function extractAttachmentsFromParts( parts: MessagePart[] ): Attachment[] {
+  const attachments: Attachment[] = []
+
+  for ( const part of parts ) {
+    if ( part.type !== 'document' && part.type !== 'image' ) continue
+    if ( !part.source || part.source.type !== 'url' || !part.source.value ) continue
+
+    const metadata =
+      typeof part.metadata === 'object' && part.metadata !== null
+        ? ( part.metadata as Record<string, unknown> )
+        : null
+
+    const name =
+      metadata && typeof metadata.name === 'string'
+        ? metadata.name
+        : part.type === 'image'
+          ? 'Image attachment'
+          : 'Document attachment'
+
+    const size =
+      metadata && typeof metadata.size === 'number' ? metadata.size : 0
+
+    const documentId =
+      metadata && typeof metadata.documentId === 'string'
+        ? metadata.documentId
+        : undefined
+
+    attachments.push( {
+      documentId,
+      name,
+      type: part.source.mimeType ?? 'application/octet-stream',
+      size,
+      url: part.source.value,
+    } )
+  }
+
+  return attachments
+}
+
+function asRecord( value: unknown ): Record<string, unknown> | undefined {
+  if ( typeof value !== 'object' || value === null || Array.isArray( value ) ) {
+    return undefined
+  }
+  return value as Record<string, unknown>
 }
 
 // Maps tool names to friendly labels + icons
@@ -154,6 +208,7 @@ export default function MessageBubble( {
   parts,
   isStreaming = false,
   onToolApproval,
+  onOpenAttachment,
 }: MessageBubbleProps ) {
   const isUser = role === 'user'
   const isAssistant = role === 'assistant'
@@ -171,7 +226,13 @@ export default function MessageBubble( {
     null
 
   // Collect tool-call parts
-  const toolCallParts = parts.filter( ( p ) => p.type === 'tool-call' )
+  const toolCallParts = parts
+    .filter( ( p ) => p.type === 'tool-call' )
+    .map( ( part ) => ( {
+      ...part,
+      input: asRecord( part.input ),
+      output: asRecord( part.output ),
+    } ) )
 
   // Collect tool-call parts awaiting approval
   const approvalParts = parts.filter(
@@ -180,6 +241,11 @@ export default function MessageBubble( {
       p.state === 'approval-requested' &&
       p.approval?.id,
   )
+
+  const mergedAttachments = [
+    ...( attachments ?? [] ),
+    ...extractAttachmentsFromParts( parts ),
+  ]
 
   return (
     <div
@@ -216,7 +282,7 @@ export default function MessageBubble( {
               <ToolApprovalCard
                 key={part.approval!.id}
                 toolName={part.name ?? 'Unknown tool'}
-                input={part.input}
+                input={asRecord( part.input )}
                 approvalId={part.approval!.id}
                 onApproval={onToolApproval}
               />
@@ -243,33 +309,21 @@ export default function MessageBubble( {
 
 
         {/* Attachments */}
-        {attachments && attachments.length > 0 && (
+        {mergedAttachments.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-1">
-            {attachments.map( ( att, idx ) => {
-              const isImage = att.type.startsWith( 'image/' )
-              if ( isImage ) {
-                return (
-                  <a
-                    key={idx}
-                    href={att.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img
-                      src={att.url}
-                      alt={att.name}
-                      className="max-w-50 max-h-50 rounded-lg border border-border object-cover"
-                    />
-                  </a>
-                )
-              }
+            {mergedAttachments.map( ( att, idx ) => {
               return (
-                <a
+                <button
+                  type="button"
                   key={idx}
-                  href={att.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border hover:bg-accent/50 transition-colors w-44"
+                  onClick={() => {
+                    if ( onOpenAttachment ) {
+                      void onOpenAttachment( att )
+                      return
+                    }
+                    window.open( att.url, '_blank', 'noopener,noreferrer' )
+                  }}
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate text-foreground">
@@ -279,7 +333,7 @@ export default function MessageBubble( {
                       {formatFileSize( att.size )}
                     </p>
                   </div>
-                </a>
+                </button>
               )
             } )}
           </div>

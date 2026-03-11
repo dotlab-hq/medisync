@@ -125,6 +125,12 @@
 
 **Fix:** Replaced with local `useState(initialChatId ?? null)`. The zustand store's `activeConversationId` is now only used for sidebar highlighting, not for determining which conversation to load or save messages to. URL (via `initialChatId` prop) is the single source of truth.
 
+### Chat useEffect dependencies blocked persistence + retitle
+
+**Problem:** `ChatContainer` had save/retitle logic in an effect that depended on `isLoading` and `conversationId` but not `messages`. After streaming ended, the effect could read stale messages, skip assistant-save, and never trigger first-response title generation.
+
+**Fix:** Included `messages` in dependencies, deduped assistant persistence by message ID, and switched user-message persistence to happen at send time (existing chat via `saveMessages`, new chat via `createConversationAndSend`). This avoids duplicate user rows and makes retitle deterministic.
+
 ### Tool call data not saved to DB
 
 **Problem:** The save-messages effect filtered with `m.content.trim().length > 0`, which dropped assistant messages that were purely tool-call results with no text content. Tool call data in `parts` was lost.

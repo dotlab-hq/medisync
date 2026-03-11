@@ -31,6 +31,7 @@ type Conversation = {
 type ChatSidebarProps = {
   conversations: Conversation[]
   isLoading: boolean
+  selectedConversationId?: string | null
   onNew: () => void
   onSelect: ( id: string ) => void
   onDelete: ( id: string ) => void
@@ -44,6 +45,7 @@ type ChatSidebarProps = {
 export default function ChatSidebar( {
   conversations,
   isLoading,
+  selectedConversationId,
   onNew,
   onSelect,
   onDelete,
@@ -54,6 +56,7 @@ export default function ChatSidebar( {
   hasMore = false,
 }: ChatSidebarProps ) {
   const { activeConversationId, sidebarOpen, toggleSidebar } = useChatStore()
+  const effectiveSelectedId = selectedConversationId ?? activeConversationId
   const scrollContainerRef = useRef<HTMLDivElement>( null )
   const loadMoreTriggerRef = useRef<HTMLDivElement>( null )
   const [editingId, setEditingId] = useState<string | null>( null )
@@ -161,7 +164,7 @@ export default function ChatSidebar( {
                       className={cn(
                         'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
                         'hover:bg-primary/10',
-                        activeConversationId === c.id &&
+                        effectiveSelectedId === c.id &&
                         'bg-primary/10 font-medium text-primary',
                       )}
                       onClick={() => !editingId && onSelect( c.id )}
@@ -169,7 +172,7 @@ export default function ChatSidebar( {
                       <MessageSquare
                         className={cn(
                           'h-3.5 w-3.5 shrink-0',
-                          activeConversationId === c.id
+                          effectiveSelectedId === c.id
                             ? 'text-primary'
                             : 'text-muted-foreground',
                         )}

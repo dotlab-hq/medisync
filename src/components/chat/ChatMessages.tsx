@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Bot } from 'lucide-react'
 
 type Attachment = {
+  documentId?: string
   name: string
   type: string
   size: number
@@ -17,9 +18,15 @@ type UIMessage = {
     type: string
     content?: string
     text?: string
+    source?: {
+      type: string
+      value: string
+      mimeType?: string
+    }
+    metadata?: unknown
     name?: string
-    input?: Record<string, unknown>
-    output?: Record<string, unknown>
+    input?: unknown
+    output?: unknown
   }>
   reasoning?: string | null
   attachments?: Attachment[] | null
@@ -32,12 +39,14 @@ type ChatMessagesProps = {
   messages: UIMessage[]
   isLoading: boolean
   onToolApproval?: ( response: { id: string; approved: boolean } ) => Promise<void>
+  onOpenAttachment?: ( attachment: Attachment ) => Promise<void>
 }
 
 export default function ChatMessages( {
   messages,
   isLoading,
   onToolApproval,
+  onOpenAttachment,
 }: ChatMessagesProps ) {
   const bottomRef = useRef<HTMLDivElement>( null )
 
@@ -59,18 +68,26 @@ export default function ChatMessages( {
         const isLastAssistantMsg =
           msg.role === 'assistant' && index === messages.length - 1 && isLoading
 
+        const attachments =
+          'attachments' in msg
+            ? ( msg as UIMessage & { attachments?: Attachment[] | null } ).attachments ?? undefined
+            : undefined
+
         return (
           <MessageBubble
             key={msg.id}
             messageId={msg.id}
             role={msg.role}
             reasoning={msg.reasoning}
-            attachments={msg.attachments}
+            attachments={attachments}
             inputTokens={msg.inputTokens}
             outputTokens={msg.outputTokens}
             modelUsed={msg.modelUsed}
             parts={msg.parts}
-            isStreaming={isLastAssistantMsg} onToolApproval={onToolApproval} />
+            isStreaming={isLastAssistantMsg}
+            onToolApproval={onToolApproval}
+            onOpenAttachment={onOpenAttachment}
+          />
         )
       } )}
 

@@ -126,6 +126,7 @@ function ChatPage() {
         <ChatSidebar
           conversations={conversations}
           isLoading={loading}
+          selectedConversationId={activeConversationId}
           onNew={handleNew}
           onSelect={handleSelect}
           onDelete={handleDelete}

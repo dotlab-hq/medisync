@@ -14,6 +14,15 @@ type ConversationItem = {
   updatedAt: Date | string
 }
 
+type RegenerateMessage = {
+  role: string
+  content: string
+}
+
+type ConversationWithMessages = {
+  messages?: RegenerateMessage[]
+}
+
 export const Route = createFileRoute( '/_dashboard/dashboard/chat/$chatId' )( {
   component: ChatDetailPage,
 } )
@@ -21,13 +30,7 @@ export const Route = createFileRoute( '/_dashboard/dashboard/chat/$chatId' )( {
 function ChatDetailPage() {
   const { chatId: paramChatId } = Route.useParams()
   const navigate = useNavigate()
-
-  // Fallback: try to extract from pathname if params don't work
-  const location = window.location.pathname
-  const pathMatch = location.match( /\/chat\/([^/]+)$/ )
-  const chatId = paramChatId || pathMatch?.[1] || null
-
-  console.log( '[ChatDetailPage] Route params:', { paramChatId, pathMatch, final: chatId } )
+  const chatId = paramChatId
   const [conversations, setConversations] = useState<ConversationItem[]>( [] )
   const [loading, setLoading] = useState( true )
   const { activeConversationId, setActiveConversation } = useChatStore()
@@ -42,7 +45,11 @@ function ChatDetailPage() {
     listConversations()
       .then( ( result ) => {
         const items = Array.isArray( result ) ? result : []
-        setConversations( items )
+        setConversations( ( prev ) => {
+          const serverIds = new Set( items.map( ( c ) => c.id ) )
+          const optimisticOnly = prev.filter( ( c ) => !serverIds.has( c.id ) )
+          return [...optimisticOnly, ...items]
+        } )
       } )
       .catch( () => { } )
       .finally( () => setLoading( false ) )
@@ -115,11 +122,12 @@ function ChatDetailPage() {
     async ( id: string ) => {
       try {
         const conv = await getConversation( { data: { id } } )
-        if ( !Array.isArray( ( conv as any )?.messages ) ) {
+        const conversation = conv as ConversationWithMessages
+        if ( !Array.isArray( conversation.messages ) ) {
           console.error( 'Invalid conversation data - messages is not an array:', conv )
           return
         }
-        const plainMessages = ( conv as any ).messages.map( ( m: { role: string; content: string } ) => ( {
+        const plainMessages = conversation.messages.map( ( m ) => ( {
           role: m.role,
           content: m.content,
         } ) )
@@ -154,6 +162,7 @@ function ChatDetailPage() {
         <ChatSidebar
           conversations={conversations}
           isLoading={loading}
+          selectedConversationId={chatId}
           onNew={handleNew}
           onSelect={handleSelect}
           onDelete={handleDelete}
@@ -174,7 +183,7 @@ function ChatDetailPage() {
           }
         >
           <ChatContainer
-            key={chatId} initialChatId={chatId} onConversationCreated={handleConversationCreated}
+            initialChatId={chatId} onConversationCreated={handleConversationCreated}
             onTitleUpdated={handleTitleUpdated}
           />
         </Suspense>

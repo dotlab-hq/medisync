@@ -41,6 +41,17 @@ const saveMessagesSchema = z.object( {
       content: z.string(),
       reasoning: z.string().nullish(),
       parts: z.array( z.record( z.string(), z.unknown() ) ).optional(),
+      attachments: z
+        .array(
+          z.object( {
+            documentId: z.string().min( 1 ).optional(),
+            name: z.string().min( 1 ),
+            type: z.string().min( 1 ),
+            size: z.number().int().nonnegative(),
+            url: z.string().min( 1 ),
+          } ),
+        )
+        .optional(),
       inputTokens: z.number().nullish(),
       outputTokens: z.number().nullish(),
       modelUsed: z.string().nullish(),
@@ -96,7 +107,14 @@ export const getConversation = createServerFn( { method: "GET" } )
           id: string;
           role: string;
           content: string;
-          parts: Array<Record<string, any>>;
+          parts: Array<Record<string, {}>>;
+          attachments?: Array<{
+            documentId?: string
+            name: string
+            type: string
+            size: number
+            url: string
+          }> | null
         }>,
       };
       console.log( '[getConversation] Returning result:', result )
@@ -138,6 +156,7 @@ export const saveMessages = createServerFn( { method: "POST" } )
       content: m.content,
       reasoning: m.reasoning ?? null,
       parts: m.parts ?? [],
+      attachments: m.attachments,
       inputTokens: m.inputTokens ?? null,
       outputTokens: m.outputTokens ?? null,
       modelUsed: m.modelUsed ?? null,
@@ -179,6 +198,17 @@ export const setMessageFeedback = createServerFn( { method: "POST" } )
 const createConversationAndSendSchema = z.object( {
   content: z.string(),
   parts: z.array( z.record( z.string(), z.unknown() ) ).default( [] ),
+  attachments: z
+    .array(
+      z.object( {
+        documentId: z.string().min( 1 ).optional(),
+        name: z.string().min( 1 ),
+        type: z.string().min( 1 ),
+        size: z.number().int().nonnegative(),
+        url: z.string().min( 1 ),
+      } ),
+    )
+    .optional(),
 } );
 
 export const createConversationAndSend = createServerFn( { method: "POST" } )
@@ -196,6 +226,7 @@ export const createConversationAndSend = createServerFn( { method: "POST" } )
         role: "user",
         content: data.content,
         parts: data.parts,
+        attachments: data.attachments,
       } )
       .returning();
     return { conversation, message };
