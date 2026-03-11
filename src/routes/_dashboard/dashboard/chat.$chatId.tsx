@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useChatStore } from '@/components/chat/chat-store'
 import { ChatSidebarToggle } from '@/components/chat/ChatSidebar'
-import { listConversations, deleteConversation } from '@/server/chat'
+import { listConversations, deleteConversation, getConversation, renameConversation } from '@/server/chat'
 
 const ChatSidebar = lazy( () => import( '@/components/chat/ChatSidebar' ) )
 const ChatContainer = lazy( () => import( '@/components/chat/ChatContainer' ) )
@@ -14,28 +14,22 @@ type ConversationItem = {
   updatedAt: Date | string
 }
 
-function mergeUniqueConversations(
-  existing: ConversationItem[],
-  incoming: ConversationItem[],
-) {
-  const map = new Map<string, ConversationItem>()
-  for ( const item of existing ) map.set( item.id, item )
-  for ( const item of incoming ) map.set( item.id, item )
-  return Array.from( map.values() )
-}
-
 export const Route = createFileRoute( '/_dashboard/dashboard/chat/$chatId' )( {
   component: ChatDetailPage,
 } )
 
 function ChatDetailPage() {
-  const { chatId } = Route.useParams()
+  const { chatId: paramChatId } = Route.useParams()
   const navigate = useNavigate()
+
+  // Fallback: try to extract from pathname if params don't work
+  const location = window.location.pathname
+  const pathMatch = location.match( /\/chat\/([^/]+)$/ )
+  const chatId = paramChatId || pathMatch?.[1] || null
+
+  console.log( '[ChatDetailPage] Route params:', { paramChatId, pathMatch, final: chatId } )
   const [conversations, setConversations] = useState<ConversationItem[]>( [] )
   const [loading, setLoading] = useState( true )
-  const [loadingMore, setLoadingMore] = useState( false )
-  const [hasMore, setHasMore] = useState( true )
-  const [nextCursor, setNextCursor] = useState<string | null>( null )
   const { activeConversationId, setActiveConversation } = useChatStore()
 
   // Always sync URL chatId into store — fire on mount and whenever chatId changes
@@ -45,37 +39,18 @@ function ChatDetailPage() {
 
   // Load conversations on mount
   useEffect( () => {
-    listConversations( { data: { limit: 10 } } )
+    listConversations()
       .then( ( result ) => {
-        setConversations( ( prev ) => {
-          const serverIds = new Set( result.items.map( ( c ) => c.id ) )
-          const optimistic = prev.filter( ( c ) => !serverIds.has( c.id ) )
-          return mergeUniqueConversations( optimistic, result.items )
-        } )
-        setNextCursor( result.nextCursor )
-        setHasMore( result.hasMore )
+        const items = Array.isArray( result ) ? result : []
+        setConversations( items )
       } )
       .catch( () => { } )
       .finally( () => setLoading( false ) )
   }, [] )
 
   const loadMore = useCallback( async () => {
-    if ( !hasMore || loadingMore || !nextCursor ) return
-
-    setLoadingMore( true )
-    try {
-      const result = await listConversations( {
-        data: { cursor: nextCursor, limit: 10 },
-      } )
-      setConversations( ( prev ) => mergeUniqueConversations( prev, result.items ) )
-      setNextCursor( result.nextCursor )
-      setHasMore( result.hasMore )
-    } catch ( err ) {
-      console.error( 'Failed to load more conversations:', err )
-    } finally {
-      setLoadingMore( false )
-    }
-  }, [hasMore, loadingMore, nextCursor] )
+    return // pagination not implemented yet
+  }, [] )
 
   const handleNew = useCallback( () => {
     setActiveConversation( null )
@@ -124,6 +99,47 @@ function ChatDetailPage() {
     } )
   }, [] )
 
+  const handleRename = useCallback(
+    async ( id: string, title: string ) => {
+      try {
+        await renameConversation( { data: { id, title } } )
+        handleTitleUpdated( id, title )
+      } catch ( err ) {
+        console.error( 'Failed to rename conversation:', err )
+      }
+    },
+    [handleTitleUpdated],
+  )
+
+  const handleRegenerateTitle = useCallback(
+    async ( id: string ) => {
+      try {
+        const conv = await getConversation( { data: { id } } )
+        if ( !Array.isArray( ( conv as any )?.messages ) ) {
+          console.error( 'Invalid conversation data - messages is not an array:', conv )
+          return
+        }
+        const plainMessages = ( conv as any ).messages.map( ( m: { role: string; content: string } ) => ( {
+          role: m.role,
+          content: m.content,
+        } ) )
+        const res = await fetch( '/api/chat/retitle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify( { messages: plainMessages } ),
+        } )
+        const { title } = ( await res.json() ) as { title?: string }
+        if ( title && title !== 'New Chat' ) {
+          await renameConversation( { data: { id, title } } )
+          handleTitleUpdated( id, title )
+        }
+      } catch ( err ) {
+        console.error( 'Failed to regenerate title:', err )
+      }
+    },
+    [handleTitleUpdated],
+  )
+
   return (
     <div className="-mx-4 lg:-mx-8 -my-6 relative flex h-screen overflow-hidden">
       <Suspense
@@ -141,9 +157,9 @@ function ChatDetailPage() {
           onNew={handleNew}
           onSelect={handleSelect}
           onDelete={handleDelete}
+          onRename={handleRename}
+          onRegenerateTitle={handleRegenerateTitle}
           onLoadMore={loadMore}
-          loadingMore={loadingMore}
-          hasMore={hasMore}
         />
       </Suspense>
 

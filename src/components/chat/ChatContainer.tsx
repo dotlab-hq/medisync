@@ -13,6 +13,7 @@ import {
   createConversationAndSend,
   getConversation,
 } from '@/server/chat'
+import { retitleConversation } from '@/server/chat-retitle'
 
 // Pure helper — defined outside to avoid stale-closure issues in deps
 function extractText(
@@ -51,15 +52,22 @@ export default function ChatContainer( {
   onTitleUpdated,
   initialChatId,
 }: ChatContainerProps ) {
+  console.log( '[ChatContainer] Mounted with initialChatId:', initialChatId )
   const { setActiveConversation } = useChatStore()
+
+  // Fallback: try to extract chatId from URL if not provided
+  const urlMatch = typeof window !== 'undefined' ? window.location.pathname.match( /\/chat\/([^/]+)$/ ) : null
+  const effectiveInitialChatId = initialChatId || urlMatch?.[1]
+  console.log( '[ChatContainer] Effective initialChatId:', effectiveInitialChatId, '(from URL: ', urlMatch?.[1], ')' )
 
   // URL is the single source of truth for which conversation is active.
   // Store state is only used for sidebar highlighting.
-  const [conversationId, setConversationId] = useState<string | null>( initialChatId ?? null )
+  const [conversationId, setConversationId] = useState<string | null>( effectiveInitialChatId ?? null )
 
   // Track the assistant message ID we last saved — prevents double-saves
   const savedMsgIdRef = useRef<string | null>( null )
   const retitledRef = useRef<Set<string>>( new Set() )
+  const loadedConversationRef = useRef<string | null>( null )
 
   // Capture token usage + model from the stream's RUN_FINISHED event
   const lastUsageRef = useRef<TokenUsageInfo>( {} )
@@ -86,18 +94,31 @@ export default function ChatContainer( {
   // Helper: fetch a conversation from DB and push its messages into useChat state
   const loadConversation = useCallback(
     ( convId: string ) => {
+      console.log( 'loadConversation called with:', convId )
       getConversation( { data: { id: convId } } )
         .then( ( conv ) => {
-          const uiMessages = conv.messages.map( ( msg ) => ( {
-            id: msg.id,
-            role: msg.role,
-            parts:
-              msg.parts.length > 0
-                ? msg.parts
-                : [{ type: 'text', text: msg.content }],
-          } ) )
-          setMessages( uiMessages as any )
-          savedMsgIdRef.current = null
+          try {
+            console.log( 'Raw conversation from server:', conv )
+            
+            if ( !( 'messages' in conv ) ) {
+              throw new Error( `Conversation missing 'messages' property. Keys: ${Object.keys( conv ).join( ', ' )}` )
+            }
+            if ( !Array.isArray( conv.messages ) ) {
+              throw new Error(
+                `Expected messages to be an array, got ${typeof conv.messages}: ${JSON.stringify( conv.messages )}`,
+              )
+            }
+            console.log( 'Successfully loaded', conv.messages.length, 'messages' )
+            const uiMessages = conv.messages.map( ( msg ) => ( {
+              id: msg.id,
+              role: msg.role,
+              parts: msg.parts.length ? msg.parts : [{ type: 'text', text: msg.content }],
+            } ) )
+            setMessages( uiMessages as any )
+            savedMsgIdRef.current = null
+          } catch ( err ) {
+            console.error( 'Error processing conversation data:', err )
+          }
         } )
         .catch( ( err ) => {
           console.error( 'Failed to load conversation:', err )
@@ -109,28 +130,34 @@ export default function ChatContainer( {
   // Load conversation from DB when initialChatId is provided (URL-based navigation).
   // Component is keyed by chatId, so this fires exactly once per chat on mount.
   useEffect( () => {
-    if ( !initialChatId ) return
-    setActiveConversation( initialChatId )
-    loadConversation( initialChatId )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialChatId] )
+    if ( !effectiveInitialChatId ) {
+      console.log( 'No effectiveInitialChatId provided' )
+      return
+    }
+    if ( loadedConversationRef.current === effectiveInitialChatId ) {
+      console.log( 'Conversation already loaded:', effectiveInitialChatId )
+      return
+    }
+    console.log( 'Loading conversation with ID:', effectiveInitialChatId )
+    loadedConversationRef.current = effectiveInitialChatId
+    setActiveConversation( effectiveInitialChatId )
+    loadConversation( effectiveInitialChatId )
+  }, [effectiveInitialChatId, setActiveConversation] )
 
   // ── Auto-retitle (separate Groq call, best-effort) ─────────────────
   const autoRetitle = useCallback(
     async ( convId: string, msgs: typeof messages ) => {
       if ( retitledRef.current.has( convId ) ) return
+      if ( !Array.isArray( msgs ) || msgs.length === 0 ) return
       retitledRef.current.add( convId )
       try {
         const plainMessages = msgs.map( ( m ) => ( {
-          role: m.role,
-          content: extractText( m.parts ),
+          role: m.role || 'user',
+          content: extractText( m.parts || [] ),
         } ) )
-        const res = await fetch( '/api/chat/retitle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify( { messages: plainMessages } ),
+        const { title } = await retitleConversation( {
+          data: { messages: plainMessages },
         } )
-        const { title } = ( await res.json() ) as { title?: string }
         if ( title && title !== 'New Chat' ) {
           await renameConversation( { data: { id: convId, title } } )
           onTitleUpdated?.( convId, title )
@@ -146,9 +173,12 @@ export default function ChatContainer( {
   useEffect( () => {
     if ( isLoading ) return // still streaming
     if ( !conversationId ) return
-    if ( messages.length === 0 ) return
 
-    const lastMsg = messages[messages.length - 1]
+    // Snapshot messages to avoid stale closures
+    const currentMessages = ( messages as any ) || []
+    if ( currentMessages.length === 0 ) return
+
+    const lastMsg = currentMessages[currentMessages.length - 1]
     if ( lastMsg.role !== 'assistant' ) return
 
     // De-duplicate: skip if we already persisted this assistant turn
@@ -166,19 +196,20 @@ export default function ChatContainer( {
       modelUsed?: string | null
     }> = []
 
-    for ( let i = messages.length - 2; i >= 0; i-- ) {
-      if ( messages[i].role === 'user' ) {
+    for ( let i = currentMessages.length - 2; i >= 0; i-- ) {
+      if ( currentMessages[i].role === 'user' ) {
         toSave.push( {
           role: 'user',
-          content: extractText( messages[i].parts ),
-          parts: messages[i].parts as Array<Record<string, unknown>>,
+          content: extractText( currentMessages[i].parts || [] ),
+          parts: ( currentMessages[i].parts || [] ) as Array<Record<string, unknown>>,
         } )
         break
       }
     }
 
     // Extract reasoning from the assistant message parts
-    const reasoningParts = lastMsg.parts.filter( ( p ) => p.type === 'thinking' )
+    const parts = lastMsg.parts || []
+    const reasoningParts = parts.filter( ( p ) => p.type === 'thinking' )
     const reasoningText =
       reasoningParts.length > 0
         ? reasoningParts.map( ( p ) => p.content || '' ).join( '\n' )
@@ -189,9 +220,9 @@ export default function ChatContainer( {
 
     toSave.push( {
       role: 'assistant',
-      content: extractText( lastMsg.parts ),
+      content: extractText( lastMsg.parts || [] ),
       reasoning: reasoningText,
-      parts: lastMsg.parts as Array<Record<string, unknown>>,
+      parts: ( lastMsg.parts || [] ) as Array<Record<string, unknown>>,
       inputTokens: usage.promptTokens ?? null,
       outputTokens: usage.completionTokens ?? null,
       modelUsed: usage.model ?? null,
@@ -213,7 +244,7 @@ export default function ChatContainer( {
 
           // Replace client-side streamed ID with DB ID so feedback actions use a valid message ID.
           setMessages(
-            messages.map( ( m ) =>
+            currentMessages.map( ( m: any ) =>
               m.id === lastMsg.id ? { ...m, id: insertedAssistant.id } : m,
             ),
           )
@@ -222,10 +253,10 @@ export default function ChatContainer( {
     }
 
     // Trigger retitle after the very first assistant reply
-    if ( messages.filter( ( m ) => m.role === 'assistant' ).length === 1 ) {
-      autoRetitle( conversationId, messages )
+    if ( currentMessages.filter( ( m: any ) => m.role === 'assistant' ).length === 1 ) {
+      autoRetitle( conversationId, currentMessages )
     }
-  }, [isLoading, messages, conversationId, autoRetitle, setMessages] )
+  }, [isLoading, conversationId, autoRetitle, setMessages] )
 
   // ── Send (auto-creates conversation if none selected) ────────────
   const handleSend = useCallback(

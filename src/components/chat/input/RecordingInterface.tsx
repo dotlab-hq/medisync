@@ -3,6 +3,7 @@ import { Check, Loader2, Mic, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useMicDictateStore } from '../stores/useMicDictate'
 import { toast } from 'sonner'
+import { transcribeAudioMessage } from '@/server/audio'
 
 const BAR_COUNT = 48
 const BAR_GAP = 2
@@ -166,21 +167,16 @@ export function RecordingInterface( { onTranscribed }: RecordingInterfaceProps )
       setIsTranscribing( true )
 
       try {
-        const file = new File( [blob], 'recording.webm', { type: 'audio/webm' } )
-        const fd = new FormData()
-        fd.append( 'audio', file )
+        // Convert Blob → base64 string for the server function
+        const arrayBuf = await blob.arrayBuffer()
+        const uint8 = new Uint8Array( arrayBuf )
+        const binary = Array.from( uint8 ).map( ( b ) => String.fromCharCode( b ) ).join( '' )
+        const audioBase64 = btoa( binary )
 
-        const res = await fetch( '/api/chat/transcribe', {
-          method: 'POST',
-          body: fd,
+        const result = await transcribeAudioMessage( {
+          data: { audioBase64, mimeType: blob.type || 'audio/webm' },
         } )
 
-        if ( !res.ok ) {
-          const err = await res.json().catch( () => ( {} ) )
-          throw new Error( err.error ?? `HTTP ${res.status}` )
-        }
-
-        const result = await res.json()
         if ( result.text ) {
           onTranscribed( result.text )
           toast.success( 'Transcript appended' )

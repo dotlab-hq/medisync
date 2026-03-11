@@ -46,194 +46,194 @@ import { Route as DashboardDashboardChatRouteImport } from './routes/_dashboard/
 import { Route as DashboardDashboardAppointmentsRouteImport } from './routes/_dashboard/dashboard/appointments'
 import { Route as DashboardDashboardChatChatIdRouteImport } from './routes/_dashboard/dashboard/chat.$chatId'
 
-const OnboardingRoute = OnboardingRouteImport.update( {
+const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
-} as any )
-const AuthRoute = AuthRouteImport.update( {
+} as any)
+const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
-} as any )
-const PublicRoute = PublicRouteImport.update( {
+} as any)
+const PublicRoute = PublicRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
-} as any )
-const DashboardRoute = DashboardRouteImport.update( {
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
   id: '/_dashboard',
   getParentRoute: () => rootRouteImport,
-} as any )
-const AuthIndexRoute = AuthIndexRouteImport.update( {
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthRoute,
-} as any )
-const PublicIndexRoute = PublicIndexRouteImport.update( {
+} as any)
+const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicRoute,
-} as any )
-const EmergencyTokenRoute = EmergencyTokenRouteImport.update( {
+} as any)
+const EmergencyTokenRoute = EmergencyTokenRouteImport.update({
   id: '/emergency/$token',
   path: '/emergency/$token',
   getParentRoute: () => rootRouteImport,
-} as any )
-const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update( {
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
   getParentRoute: () => AuthRoute,
-} as any )
-const AuthSignupRoute = AuthSignupRouteImport.update( {
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => AuthRoute,
-} as any )
-const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update( {
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => AuthRoute,
-} as any )
-const AuthLoginRoute = AuthLoginRouteImport.update( {
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AuthRoute,
-} as any )
-const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update( {
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
-} as any )
-const PublicTermsRoute = PublicTermsRouteImport.update( {
+} as any)
+const PublicTermsRoute = PublicTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => PublicRoute,
-} as any )
-const PublicPrivacyRoute = PublicPrivacyRouteImport.update( {
+} as any)
+const PublicPrivacyRoute = PublicPrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
   getParentRoute: () => PublicRoute,
-} as any )
-const PublicHelpRoute = PublicHelpRouteImport.update( {
+} as any)
+const PublicHelpRoute = PublicHelpRouteImport.update({
   id: '/help',
   path: '/help',
   getParentRoute: () => PublicRoute,
-} as any )
-const PublicGeoAssistanceRoute = PublicGeoAssistanceRouteImport.update( {
+} as any)
+const PublicGeoAssistanceRoute = PublicGeoAssistanceRouteImport.update({
   id: '/geo-assistance',
   path: '/geo-assistance',
   getParentRoute: () => PublicRoute,
-} as any )
-const PublicCampsRoute = PublicCampsRouteImport.update( {
+} as any)
+const PublicCampsRoute = PublicCampsRouteImport.update({
   id: '/camps',
   path: '/camps',
   getParentRoute: () => PublicRoute,
-} as any )
-const PublicAboutRoute = PublicAboutRouteImport.update( {
+} as any)
+const PublicAboutRoute = PublicAboutRouteImport.update({
   id: '/about',
   path: '/about',
   getParentRoute: () => PublicRoute,
-} as any )
-const ApiChatIndexRoute = ApiChatIndexRouteImport.update( {
+} as any)
+const ApiChatIndexRoute = ApiChatIndexRouteImport.update({
   id: '/api/chat/',
   path: '/api/chat/',
   getParentRoute: () => rootRouteImport,
-} as any )
-const DashboardDashboardIndexRoute = DashboardDashboardIndexRouteImport.update( {
+} as any)
+const DashboardDashboardIndexRoute = DashboardDashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
   getParentRoute: () => DashboardRoute,
-} as any )
-const ApiCronNotifyRemindersRoute = ApiCronNotifyRemindersRouteImport.update( {
+} as any)
+const ApiCronNotifyRemindersRoute = ApiCronNotifyRemindersRouteImport.update({
   id: '/api/cron/notify-reminders',
   path: '/api/cron/notify-reminders',
   getParentRoute: () => rootRouteImport,
-} as any )
+} as any)
 const ApiCronNotifyAppointmentsRoute =
-  ApiCronNotifyAppointmentsRouteImport.update( {
+  ApiCronNotifyAppointmentsRouteImport.update({
     id: '/api/cron/notify-appointments',
     path: '/api/cron/notify-appointments',
     getParentRoute: () => rootRouteImport,
-  } as any )
-const ApiChatTtsRoute = ApiChatTtsRouteImport.update( {
+  } as any)
+const ApiChatTtsRoute = ApiChatTtsRouteImport.update({
   id: '/api/chat/tts',
   path: '/api/chat/tts',
   getParentRoute: () => rootRouteImport,
-} as any )
-const ApiChatTranscribeRoute = ApiChatTranscribeRouteImport.update( {
+} as any)
+const ApiChatTranscribeRoute = ApiChatTranscribeRouteImport.update({
   id: '/api/chat/transcribe',
   path: '/api/chat/transcribe',
   getParentRoute: () => rootRouteImport,
-} as any )
-const ApiChatRetitleRoute = ApiChatRetitleRouteImport.update( {
+} as any)
+const ApiChatRetitleRoute = ApiChatRetitleRouteImport.update({
   id: '/api/chat/retitle',
   path: '/api/chat/retitle',
   getParentRoute: () => rootRouteImport,
-} as any )
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update( {
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
-} as any )
+} as any)
 const DashboardDashboardSettingsRoute =
-  DashboardDashboardSettingsRouteImport.update( {
+  DashboardDashboardSettingsRouteImport.update({
     id: '/dashboard/settings',
     path: '/dashboard/settings',
     getParentRoute: () => DashboardRoute,
-  } as any )
+  } as any)
 const DashboardDashboardRemindersRoute =
-  DashboardDashboardRemindersRouteImport.update( {
+  DashboardDashboardRemindersRouteImport.update({
     id: '/dashboard/reminders',
     path: '/dashboard/reminders',
     getParentRoute: () => DashboardRoute,
-  } as any )
+  } as any)
 const DashboardDashboardQrCodeRoute =
-  DashboardDashboardQrCodeRouteImport.update( {
+  DashboardDashboardQrCodeRouteImport.update({
     id: '/dashboard/qr-code',
     path: '/dashboard/qr-code',
     getParentRoute: () => DashboardRoute,
-  } as any )
+  } as any)
 const DashboardDashboardProfileRoute =
-  DashboardDashboardProfileRouteImport.update( {
+  DashboardDashboardProfileRouteImport.update({
     id: '/dashboard/profile',
     path: '/dashboard/profile',
     getParentRoute: () => DashboardRoute,
-  } as any )
+  } as any)
 const DashboardDashboardHealthRoute =
-  DashboardDashboardHealthRouteImport.update( {
+  DashboardDashboardHealthRouteImport.update({
     id: '/dashboard/health',
     path: '/dashboard/health',
     getParentRoute: () => DashboardRoute,
-  } as any )
+  } as any)
 const DashboardDashboardDocumentsRoute =
-  DashboardDashboardDocumentsRouteImport.update( {
+  DashboardDashboardDocumentsRouteImport.update({
     id: '/dashboard/documents',
     path: '/dashboard/documents',
     getParentRoute: () => DashboardRoute,
-  } as any )
+  } as any)
 const DashboardDashboardDeveloperRoute =
-  DashboardDashboardDeveloperRouteImport.update( {
+  DashboardDashboardDeveloperRouteImport.update({
     id: '/dashboard/developer',
     path: '/dashboard/developer',
     getParentRoute: () => DashboardRoute,
-  } as any )
-const DashboardDashboardChatRoute = DashboardDashboardChatRouteImport.update( {
+  } as any)
+const DashboardDashboardChatRoute = DashboardDashboardChatRouteImport.update({
   id: '/dashboard/chat',
   path: '/dashboard/chat',
   getParentRoute: () => DashboardRoute,
-} as any )
+} as any)
 const DashboardDashboardAppointmentsRoute =
-  DashboardDashboardAppointmentsRouteImport.update( {
+  DashboardDashboardAppointmentsRouteImport.update({
     id: '/dashboard/appointments',
     path: '/dashboard/appointments',
     getParentRoute: () => DashboardRoute,
-  } as any )
+  } as any)
 const DashboardDashboardChatChatIdRoute =
-  DashboardDashboardChatChatIdRouteImport.update( {
+  DashboardDashboardChatChatIdRouteImport.update({
     id: '/$chatId',
     path: '/$chatId',
     getParentRoute: () => DashboardDashboardChatRoute,
-  } as any )
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
@@ -263,8 +263,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
-  '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/chat/transcribe': typeof ApiChatTranscribeRoute
+  '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
   '/api/cron/notify-reminders': typeof ApiCronNotifyRemindersRoute
   '/dashboard/': typeof DashboardDashboardIndexRoute
@@ -298,8 +298,8 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
-  '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/chat/transcribe': typeof ApiChatTranscribeRoute
+  '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
   '/api/cron/notify-reminders': typeof ApiCronNotifyRemindersRoute
   '/dashboard': typeof DashboardDashboardIndexRoute
@@ -337,8 +337,8 @@ export interface FileRoutesById {
   '/_dashboard/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
-  '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/chat/transcribe': typeof ApiChatTranscribeRoute
+  '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
   '/api/cron/notify-reminders': typeof ApiCronNotifyRemindersRoute
   '/_dashboard/dashboard/': typeof DashboardDashboardIndexRoute
@@ -348,113 +348,113 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-  | '/'
-  | '/auth'
-  | '/onboarding'
-  | '/about'
-  | '/camps'
-  | '/geo-assistance'
-  | '/help'
-  | '/privacy'
-  | '/terms'
-  | '/auth/forgot-password'
-  | '/auth/login'
-  | '/auth/reset-password'
-  | '/auth/signup'
-  | '/auth/verify-email'
-  | '/emergency/$token'
-  | '/auth/'
-  | '/dashboard/appointments'
-  | '/dashboard/chat'
-  | '/dashboard/developer'
-  | '/dashboard/documents'
-  | '/dashboard/health'
-  | '/dashboard/profile'
-  | '/dashboard/qr-code'
-  | '/dashboard/reminders'
-  | '/dashboard/settings'
-  | '/api/auth/$'
-  | '/api/chat/retitle'
-  | '/api/chat/tts'
-  | '/api/chat/transcribe'
-  | '/api/cron/notify-appointments'
-  | '/api/cron/notify-reminders'
-  | '/dashboard/'
-  | '/api/chat/'
-  | '/dashboard/chat/$chatId'
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/about'
+    | '/camps'
+    | '/geo-assistance'
+    | '/help'
+    | '/privacy'
+    | '/terms'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/auth/signup'
+    | '/auth/verify-email'
+    | '/emergency/$token'
+    | '/auth/'
+    | '/dashboard/appointments'
+    | '/dashboard/chat'
+    | '/dashboard/developer'
+    | '/dashboard/documents'
+    | '/dashboard/health'
+    | '/dashboard/profile'
+    | '/dashboard/qr-code'
+    | '/dashboard/reminders'
+    | '/dashboard/settings'
+    | '/api/auth/$'
+    | '/api/chat/retitle'
+    | '/api/chat/transcribe'
+    | '/api/chat/tts'
+    | '/api/cron/notify-appointments'
+    | '/api/cron/notify-reminders'
+    | '/dashboard/'
+    | '/api/chat/'
+    | '/dashboard/chat/$chatId'
   fileRoutesByTo: FileRoutesByTo
   to:
-  | '/'
-  | '/onboarding'
-  | '/about'
-  | '/camps'
-  | '/geo-assistance'
-  | '/help'
-  | '/privacy'
-  | '/terms'
-  | '/auth/forgot-password'
-  | '/auth/login'
-  | '/auth/reset-password'
-  | '/auth/signup'
-  | '/auth/verify-email'
-  | '/emergency/$token'
-  | '/auth'
-  | '/dashboard/appointments'
-  | '/dashboard/chat'
-  | '/dashboard/developer'
-  | '/dashboard/documents'
-  | '/dashboard/health'
-  | '/dashboard/profile'
-  | '/dashboard/qr-code'
-  | '/dashboard/reminders'
-  | '/dashboard/settings'
-  | '/api/auth/$'
-  | '/api/chat/retitle'
-  | '/api/chat/tts'
-  | '/api/chat/transcribe'
-  | '/api/cron/notify-appointments'
-  | '/api/cron/notify-reminders'
-  | '/dashboard'
-  | '/api/chat'
-  | '/dashboard/chat/$chatId'
+    | '/'
+    | '/onboarding'
+    | '/about'
+    | '/camps'
+    | '/geo-assistance'
+    | '/help'
+    | '/privacy'
+    | '/terms'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/auth/signup'
+    | '/auth/verify-email'
+    | '/emergency/$token'
+    | '/auth'
+    | '/dashboard/appointments'
+    | '/dashboard/chat'
+    | '/dashboard/developer'
+    | '/dashboard/documents'
+    | '/dashboard/health'
+    | '/dashboard/profile'
+    | '/dashboard/qr-code'
+    | '/dashboard/reminders'
+    | '/dashboard/settings'
+    | '/api/auth/$'
+    | '/api/chat/retitle'
+    | '/api/chat/transcribe'
+    | '/api/chat/tts'
+    | '/api/cron/notify-appointments'
+    | '/api/cron/notify-reminders'
+    | '/dashboard'
+    | '/api/chat'
+    | '/dashboard/chat/$chatId'
   id:
-  | '__root__'
-  | '/_dashboard'
-  | '/_public'
-  | '/auth'
-  | '/onboarding'
-  | '/_public/about'
-  | '/_public/camps'
-  | '/_public/geo-assistance'
-  | '/_public/help'
-  | '/_public/privacy'
-  | '/_public/terms'
-  | '/auth/forgot-password'
-  | '/auth/login'
-  | '/auth/reset-password'
-  | '/auth/signup'
-  | '/auth/verify-email'
-  | '/emergency/$token'
-  | '/_public/'
-  | '/auth/'
-  | '/_dashboard/dashboard/appointments'
-  | '/_dashboard/dashboard/chat'
-  | '/_dashboard/dashboard/developer'
-  | '/_dashboard/dashboard/documents'
-  | '/_dashboard/dashboard/health'
-  | '/_dashboard/dashboard/profile'
-  | '/_dashboard/dashboard/qr-code'
-  | '/_dashboard/dashboard/reminders'
-  | '/_dashboard/dashboard/settings'
-  | '/api/auth/$'
-  | '/api/chat/retitle'
-  | '/api/chat/tts'
-  | '/api/chat/transcribe'
-  | '/api/cron/notify-appointments'
-  | '/api/cron/notify-reminders'
-  | '/_dashboard/dashboard/'
-  | '/api/chat/'
-  | '/_dashboard/dashboard/chat/$chatId'
+    | '__root__'
+    | '/_dashboard'
+    | '/_public'
+    | '/auth'
+    | '/onboarding'
+    | '/_public/about'
+    | '/_public/camps'
+    | '/_public/geo-assistance'
+    | '/_public/help'
+    | '/_public/privacy'
+    | '/_public/terms'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/auth/signup'
+    | '/auth/verify-email'
+    | '/emergency/$token'
+    | '/_public/'
+    | '/auth/'
+    | '/_dashboard/dashboard/appointments'
+    | '/_dashboard/dashboard/chat'
+    | '/_dashboard/dashboard/developer'
+    | '/_dashboard/dashboard/documents'
+    | '/_dashboard/dashboard/health'
+    | '/_dashboard/dashboard/profile'
+    | '/_dashboard/dashboard/qr-code'
+    | '/_dashboard/dashboard/reminders'
+    | '/_dashboard/dashboard/settings'
+    | '/api/auth/$'
+    | '/api/chat/retitle'
+    | '/api/chat/transcribe'
+    | '/api/chat/tts'
+    | '/api/cron/notify-appointments'
+    | '/api/cron/notify-reminders'
+    | '/_dashboard/dashboard/'
+    | '/api/chat/'
+    | '/_dashboard/dashboard/chat/$chatId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -465,8 +465,8 @@ export interface RootRouteChildren {
   EmergencyTokenRoute: typeof EmergencyTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiChatRetitleRoute: typeof ApiChatRetitleRoute
-  ApiChatTtsRoute: typeof ApiChatTtsRoute
   ApiChatTranscribeRoute: typeof ApiChatTranscribeRoute
+  ApiChatTtsRoute: typeof ApiChatTtsRoute
   ApiCronNotifyAppointmentsRoute: typeof ApiCronNotifyAppointmentsRoute
   ApiCronNotifyRemindersRoute: typeof ApiCronNotifyRemindersRoute
   ApiChatIndexRoute: typeof ApiChatIndexRoute
@@ -734,9 +734,9 @@ interface DashboardDashboardChatRouteChildren {
 }
 
 const DashboardDashboardChatRouteChildren: DashboardDashboardChatRouteChildren =
-{
-  DashboardDashboardChatChatIdRoute: DashboardDashboardChatChatIdRoute,
-}
+  {
+    DashboardDashboardChatChatIdRoute: DashboardDashboardChatChatIdRoute,
+  }
 
 const DashboardDashboardChatRouteWithChildren =
   DashboardDashboardChatRoute._addFileChildren(
@@ -794,7 +794,7 @@ const PublicRouteChildren: PublicRouteChildren = {
 }
 
 const PublicRouteWithChildren =
-  PublicRoute._addFileChildren( PublicRouteChildren )
+  PublicRoute._addFileChildren(PublicRouteChildren)
 
 interface AuthRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
@@ -814,7 +814,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthIndexRoute: AuthIndexRoute,
 }
 
-const AuthRouteWithChildren = AuthRoute._addFileChildren( AuthRouteChildren )
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
@@ -824,14 +824,14 @@ const rootRouteChildren: RootRouteChildren = {
   EmergencyTokenRoute: EmergencyTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiChatRetitleRoute: ApiChatRetitleRoute,
-  ApiChatTtsRoute: ApiChatTtsRoute,
   ApiChatTranscribeRoute: ApiChatTranscribeRoute,
+  ApiChatTtsRoute: ApiChatTtsRoute,
   ApiCronNotifyAppointmentsRoute: ApiCronNotifyAppointmentsRoute,
   ApiCronNotifyRemindersRoute: ApiCronNotifyRemindersRoute,
   ApiChatIndexRoute: ApiChatIndexRoute,
 }
 export const routeTree = rootRouteImport
-  ._addFileChildren( rootRouteChildren )
+  ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
