@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { auth } from '@/lib/auth'
+import { transcribeAudio, analyzeTone, formatTranscript } from '@/lib/audio-pipeline'
 
 export const Route = createFileRoute( '/api/chat/transcribe' )( {
     server: {
@@ -26,43 +27,34 @@ export const Route = createFileRoute( '/api/chat/transcribe' )( {
                         )
                     }
 
-                    const apiKey = process.env.GROQ_API_KEY
-                    if ( !apiKey ) {
+                    if ( !process.env.GROQ_API_KEY ) {
                         return new Response(
                             JSON.stringify( { error: 'GROQ_API_KEY not configured' } ),
                             { status: 500, headers: { 'Content-Type': 'application/json' } },
                         )
                     }
 
-                    const groqForm = new FormData()
-                    groqForm.append( 'file', audioFile )
-                    groqForm.append( 'model', 'whisper-large-v3-turbo' )
-                    groqForm.append( 'response_format', 'json' )
-
-                    const response = await fetch(
-                        'https://api.groq.com/openai/v1/audio/transcriptions',
-                        {
-                            method: 'POST',
-                            headers: {
-                                Authorization: `Bearer ${apiKey}`,
-                            },
-                            body: groqForm,
-                        },
-                    )
-
-                    if ( !response.ok ) {
-                        const errText = await response.text()
+                    // Step 1: Whisper transcription
+                    const rawText = await transcribeAudio( audioFile )
+                    if ( !rawText.trim() ) {
                         return new Response(
-                            JSON.stringify( { error: `Groq transcription failed: ${errText}` } ),
-                            { status: 502, headers: { 'Content-Type': 'application/json' } },
+                            JSON.stringify( { text: '', rawText: '', toneAnalysis: null } ),
+                            { status: 200, headers: { 'Content-Type': 'application/json' } },
                         )
                     }
 
-                    const result = await response.json()
-                    return new Response( JSON.stringify( { text: result.text ?? '' } ), {
-                        status: 200,
-                        headers: { 'Content-Type': 'application/json' },
-                    } )
+                    // Steps 2 & 3: Tone analysis (Qwen) then formatting (Llama)
+                    const toneAnalysis = await analyzeTone( rawText )
+                    const formattedText = await formatTranscript( rawText, toneAnalysis )
+
+                    return new Response(
+                        JSON.stringify( {
+                            text: formattedText,
+                            rawText,
+                            toneAnalysis,
+                        } ),
+                        { status: 200, headers: { 'Content-Type': 'application/json' } },
+                    )
                 } catch ( error ) {
                     const message =
                         error instanceof Error ? error.message : 'Transcription error'

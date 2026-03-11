@@ -21,7 +21,16 @@ export function useChatTextarea({
 
   useEffect(() => {
     setValue(text)
-  }, [text])
+    // Adjust textarea height when store text changes (e.g., transcription)
+    const textarea = textareaRef.current
+    if (textarea && text) {
+      textarea.style.height = 'auto'
+      const scrollHeight = textarea.scrollHeight
+      const nextHeight = Math.min(scrollHeight, maxHeight)
+      textarea.style.height = `${nextHeight}px`
+      setIsMultiline(text.includes('\n') || scrollHeight > lineHeight)
+    }
+  }, [text, lineHeight, maxHeight, textareaRef])
 
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const textarea = textareaRef.current

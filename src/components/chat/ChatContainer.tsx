@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useChat, fetchServerSentEvents } from '@tanstack/ai-react'
 import type { StreamChunk } from '@tanstack/ai'
 import { clientTools } from '@tanstack/ai-client'
@@ -44,18 +44,15 @@ export default function ChatContainer( {
   onTitleUpdated,
   initialChatId,
 }: ChatContainerProps ) {
-  const { activeConversationId, setActiveConversation } = useChatStore()
+  const { setActiveConversation } = useChatStore()
 
-  // Derive the effective conversation: URL-provided takes precedence on first render
-  const effectiveConvId = initialChatId ?? activeConversationId
+  // URL is the single source of truth for which conversation is active.
+  // Store state is only used for sidebar highlighting.
+  const [conversationId, setConversationId] = useState<string | null>( initialChatId ?? null )
 
   // Track the assistant message ID we last saved — prevents double-saves
   const savedMsgIdRef = useRef<string | null>( null )
   const retitledRef = useRef<Set<string>>( new Set() )
-  // When handleSend auto-creates a new conversation, setting activeConversationId
-  // would normally trigger the reset effect and wipe messages mid-stream.
-  // This flag tells the effect to skip exactly one reset in that case.
-  const skipNextResetRef = useRef( false )
 
   // Capture token usage + model from the stream's RUN_FINISHED event
   const lastUsageRef = useRef<TokenUsageInfo>( {} )
@@ -102,36 +99,14 @@ export default function ChatContainer( {
     [setMessages],
   )
 
-  // Effect 1: URL / prop-driven load — fires when a chatId arrives via props
-  // (chat.$chatId.tsx passes initialChatId; component is remounted with key={chatId},
-  //  so this fires exactly once per chat on mount).
+  // Load conversation from DB when initialChatId is provided (URL-based navigation).
+  // Component is keyed by chatId, so this fires exactly once per chat on mount.
   useEffect( () => {
     if ( !initialChatId ) return
-    // Sync store so sidebar highlights the right item
     setActiveConversation( initialChatId )
     loadConversation( initialChatId )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialChatId] ) // intentionally omitting setActiveConversation/loadConversation to avoid re-trigger
-
-  // Effect 2: In-app conversation switch (sidebar click with no page navigation)
-  // Only runs when activeConversationId changes AND we don't have an initialChatId.
-  useEffect( () => {
-    if ( initialChatId ) return // handled by Effect 1 above
-
-    if ( skipNextResetRef.current ) {
-      // Skip exactly ONE re-run triggered by the new-conversation flow in handleSend
-      skipNextResetRef.current = false
-      return
-    }
-
-    if ( !activeConversationId ) {
-      setMessages( [] )
-      savedMsgIdRef.current = null
-      return
-    }
-
-    loadConversation( activeConversationId )
-  }, [activeConversationId, initialChatId, loadConversation, setMessages] )
+  }, [initialChatId] )
 
   // ── Auto-retitle (separate Groq call, best-effort) ─────────────────
   const autoRetitle = useCallback(
@@ -163,7 +138,7 @@ export default function ChatContainer( {
   // ── Save messages when the stream completes ───────────────────────
   useEffect( () => {
     if ( isLoading ) return // still streaming
-    if ( !effectiveConvId ) return
+    if ( !conversationId ) return
     if ( messages.length === 0 ) return
 
     const lastMsg = messages[messages.length - 1]
@@ -218,10 +193,16 @@ export default function ChatContainer( {
     // Reset usage for next turn
     lastUsageRef.current = {}
 
-    const rows = toSave.filter( ( m ) => m.content.trim().length > 0 )
+    // Keep messages that have text content OR tool-call parts (so tool calls get saved)
+    const rows = toSave.filter( ( m ) => {
+      if ( m.content.trim().length > 0 ) return true
+      // Also keep if parts contain tool-call data
+      if ( m.parts && m.parts.some( ( p ) => p.type === 'tool-call' || p.type === 'tool-result' ) ) return true
+      return false
+    } )
     if ( rows.length > 0 ) {
       saveMessages( {
-        data: { conversationId: effectiveConvId, messages: rows },
+        data: { conversationId: conversationId, messages: rows },
       } )
         .then( ( result ) => {
           const insertedAssistant = result.inserted?.find(
@@ -241,14 +222,14 @@ export default function ChatContainer( {
 
     // Trigger retitle after the very first assistant reply
     if ( messages.filter( ( m ) => m.role === 'assistant' ).length === 1 ) {
-      autoRetitle( effectiveConvId, messages )
+      autoRetitle( conversationId, messages )
     }
-  }, [isLoading, messages, effectiveConvId, autoRetitle, setMessages] )
+  }, [isLoading, messages, conversationId, autoRetitle, setMessages] )
 
   // ── Send (auto-creates conversation if none selected) ────────────
   const handleSend = useCallback(
     async ( text: string, _files?: File[] ) => {
-      let convId = effectiveConvId
+      let convId = conversationId
 
       if ( !convId ) {
         // Create conversation + first message atomically — NO separate create call
@@ -260,8 +241,8 @@ export default function ChatContainer( {
         } ) ) as { conversation: { id: string; title: string }; message: unknown }
         convId = result.conversation.id
 
-        // Mark: skip the next reset triggered by activeConversationId change
-        skipNextResetRef.current = true
+        // Update local state + sidebar highlight (URL will change via onConversationCreated)
+        setConversationId( convId )
         setActiveConversation( convId )
 
         // Pass full object so parent can optimistically prepend at top
@@ -275,7 +256,7 @@ export default function ChatContainer( {
       sendMessage( text )
     },
     [
-      effectiveConvId,
+      conversationId,
       setActiveConversation,
       sendMessage,
       onConversationCreated,

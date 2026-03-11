@@ -67,8 +67,8 @@ export default function ChatSidebar( {
   return (
     <div
       className={cn(
-        'flex flex-col border-r border-border/50 bg-card/50 transition-all duration-200',
-        sidebarOpen ? 'w-64' : 'w-0 overflow-hidden',
+        'flex flex-col border-r border-border/50 bg-card/50 transition-all duration-200 overflow-hidden',
+        sidebarOpen ? 'w-64' : 'w-0',
       )}
     >
       {/* Header */}

@@ -42,9 +42,9 @@ export default function MarkdownRenderer( {
         // Blockquote
         'prose-blockquote:border-l-4 prose-blockquote:border-primary/30 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:my-3',
 
-        // Tables
-        'prose-table:my-3 prose-table:border-collapse',
-        'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold',
+        // Tables — wrapper gets overflow-x-auto via custom component below
+        'prose-table:my-3 prose-table:border-collapse prose-table:w-full',
+        'prose-th:border prose-th:border-border prose-th:bg-muted prose-th:px-3 prose-th:py-2 prose-th:font-semibold prose-th:text-left',
         'prose-td:border prose-td:border-border prose-td:px-3 prose-td:py-2',
 
         // Images
@@ -70,6 +70,15 @@ export default function MarkdownRenderer( {
       <ReactMarkdown
         remarkPlugins={[remarkMath, remarkGfm]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
+        components={{
+          table: ({ children, ...props }) => (
+            <div className="overflow-x-auto my-3 rounded-lg border border-border">
+              <table {...props} className="w-full border-collapse">
+                {children}
+              </table>
+            </div>
+          ),
+        }}
       >
         {content}
       </ReactMarkdown>
