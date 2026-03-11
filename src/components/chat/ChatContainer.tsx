@@ -103,6 +103,7 @@ export default function ChatContainer( {
   const retitledRef = useRef<Set<string>>( new Set() )
   const loadedConversationRef = useRef<string | null>( null )
   const aiFolderIdRef = useRef<string | null>( null )
+  const loadRequestRef = useRef( 0 )
 
   // Capture token usage + model from the stream's RUN_FINISHED event
   const lastUsageRef = useRef<TokenUsageInfo>( {} )
@@ -206,13 +207,12 @@ export default function ChatContainer( {
   // Helper: fetch a conversation from DB and push its messages into useChat state
   const loadConversation = useCallback(
     ( convId: string ) => {
+      const requestId = ++loadRequestRef.current
       getConversation( { data: { id: convId } } )
         .then( ( conv ) => {
+          if ( loadRequestRef.current !== requestId ) return
           try {
-            if ( typeof conv !== 'object' || conv === null || !( 'messages' in conv ) ) {
-              throw new Error( 'Conversation payload is invalid.' )
-            }
-            const payload = conv as ConversationPayload
+            const payload = conv as unknown as ConversationPayload
             if ( !Array.isArray( payload.messages ) ) {
               throw new Error(
                 `Expected messages to be an array, got ${typeof payload.messages}: ${JSON.stringify( payload.messages )}`,
@@ -256,10 +256,13 @@ export default function ChatContainer( {
             savedMsgIdRef.current = null
           } catch ( err ) {
             console.error( 'Error processing conversation data:', err )
+            setMessages( [] )
           }
         } )
         .catch( ( err ) => {
+          if ( loadRequestRef.current !== requestId ) return
           console.error( 'Failed to load conversation:', err )
+          setMessages( [] )
         } )
     },
     [setMessages],
@@ -282,8 +285,9 @@ export default function ChatContainer( {
     }
     loadedConversationRef.current = initialChatId
     setActiveConversation( initialChatId )
+    setMessages( [] )
     loadConversation( initialChatId )
-  }, [initialChatId, clearMessages, loadConversation, setActiveConversation] )
+  }, [initialChatId, clearMessages, loadConversation, setActiveConversation, setMessages] )
 
   // ── Auto-retitle (separate Groq call, best-effort) ─────────────────
   const autoRetitle = useCallback(

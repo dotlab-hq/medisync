@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useChatStore } from '@/components/chat/chat-store'
 import { ChatSidebarToggle } from '@/components/chat/ChatSidebar'
 import { listConversations, deleteConversation, getConversation, renameConversation } from '@/server/chat'
+import { retitleConversation } from '@/server/chat-retitle'
 
 const ChatSidebar = lazy( () => import( '@/components/chat/ChatSidebar' ) )
 const ChatContainer = lazy( () => import( '@/components/chat/ChatContainer' ) )
@@ -17,10 +18,25 @@ type ConversationItem = {
 type RegenerateMessage = {
   role: string
   content: string
+  parts?: Array<Record<string, {}>>
 }
 
-type ConversationWithMessages = {
-  messages?: RegenerateMessage[]
+function extractMessageText( message: RegenerateMessage ): string {
+  const fromParts = ( message.parts ?? [] )
+    .filter( ( part ) => 'type' in part && part.type === 'text' )
+    .map( ( part ) => {
+      const content = 'content' in part && typeof part.content === 'string'
+        ? part.content
+        : ''
+      const text = 'text' in part && typeof part.text === 'string'
+        ? part.text
+        : ''
+      return content.length > 0 ? content : text
+    } )
+    .join( '' )
+
+  if ( fromParts.trim().length > 0 ) return fromParts
+  return message.content || ''
 }
 
 export const Route = createFileRoute( '/_dashboard/dashboard/chat/$chatId' )( {
@@ -122,21 +138,23 @@ function ChatDetailPage() {
     async ( id: string ) => {
       try {
         const conv = await getConversation( { data: { id } } )
-        const conversation = conv as ConversationWithMessages
-        if ( !Array.isArray( conversation.messages ) ) {
+        if ( !Array.isArray( conv.messages ) ) {
           console.error( 'Invalid conversation data - messages is not an array:', conv )
           return
         }
-        const plainMessages = conversation.messages.map( ( m ) => ( {
-          role: m.role,
-          content: m.content,
-        } ) )
-        const res = await fetch( '/api/chat/retitle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify( { messages: plainMessages } ),
+        const plainMessages = ( conv.messages as RegenerateMessage[] )
+          .map( ( m ) => ( {
+            role: m.role,
+            content: extractMessageText( m ),
+          } ) )
+          .filter( ( m ) => m.content.trim().length > 0 )
+
+        if ( plainMessages.length === 0 ) return
+
+        const { title } = await retitleConversation( {
+          data: { messages: plainMessages },
         } )
-        const { title } = ( await res.json() ) as { title?: string }
+
         if ( title && title !== 'New Chat' ) {
           await renameConversation( { data: { id, title } } )
           handleTitleUpdated( id, title )

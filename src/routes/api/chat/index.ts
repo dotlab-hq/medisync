@@ -147,17 +147,20 @@ export const Route = createFileRoute( '/api/chat/' )( {
 
           const stream = chat( {
             adapter: groqChat( 'openai/gpt-oss-120b' ),
-            messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
-              { role: 'system', content: SAFEGUARD_PROMPT },
-              {
-                role: 'system',
-                content: `SAFEGUARD_CLASSIFICATION=${JSON.stringify( safeguard )}`,
+            modelOptions: {
+              parallel_tool_calls: true,
+              reasoning: {
+                effort: 'medium',
+                summary: "auto"
               },
+            },
+            systemPrompts: [SYSTEM_PROMPT, SAFEGUARD_PROMPT,`SAFEGUARD_CLASSIFICATION=${JSON.stringify( safeguard )}`,],
+            messages: [
+              
               ...messages,
             ],
             tools: safeguard.violation ? [getUserLocationDef] : [...serverTools, getUserLocationDef],
-            agentLoopStrategy: maxIterations( 10 ),
+            agentLoopStrategy: maxIterations( 30 ),
           } )
 
           return toServerSentEventsResponse( stream )

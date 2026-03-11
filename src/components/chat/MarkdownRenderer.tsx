@@ -14,10 +14,19 @@ type MarkdownRendererProps = {
   className?: string
 }
 
+function normalizeMarkdown( content: string ): string {
+  return content
+    .replace( /\r\n?/g, '\n' )
+    .replace( /\\\[([\s\S]*?)\\\]/g, ( _, math: string ) => `$$${math}$$` )
+    .replace( /\\\(([\s\S]*?)\\\)/g, ( _, math: string ) => `$${math}$` )
+}
+
 export default function MarkdownRenderer( {
   content,
   className,
 }: MarkdownRendererProps ) {
+  const normalized = normalizeMarkdown( content )
+
   return (
     <div
       className={cn(
@@ -61,26 +70,69 @@ export default function MarkdownRenderer( {
         '[&_.katex]:text-base',
         '[&_.katex-display]:my-3',
         '[&_.katex-display]:overflow-x-auto',
-        '[&_.katex]:!text-inherit',
-        '[&_.katex-display]:!text-inherit',
+        '[&_.katex]:text-inherit!',
+        '[&_.katex-display]:text-inherit!',
 
         className,
       )}
     >
       <ReactMarkdown
-        remarkPlugins={[remarkMath, remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
         components={{
-          table: ({ children, ...props }) => (
+          table: ( { children, ...props } ) => (
             <div className="overflow-x-auto my-3 rounded-lg border border-border">
-              <table {...props} className="w-full border-collapse">
+              <table
+                {...props}
+                className="w-full border-collapse text-sm"
+              >
                 {children}
               </table>
             </div>
           ),
+          thead: ( { children, ...props } ) => (
+            <thead
+              {...props}
+              className="bg-muted/60"
+            >
+              {children}
+            </thead>
+          ),
+          tbody: ( { children, ...props } ) => (
+            <tbody
+              {...props}
+              className="divide-y divide-border"
+            >
+              {children}
+            </tbody>
+          ),
+          tr: ( { children, ...props } ) => (
+            <tr
+              {...props}
+              className="border-b border-border last:border-b-0"
+            >
+              {children}
+            </tr>
+          ),
+          th: ( { children, ...props } ) => (
+            <th
+              {...props}
+              className="border-r border-border px-3 py-2 text-left font-semibold align-top last:border-r-0"
+            >
+              {children}
+            </th>
+          ),
+          td: ( { children, ...props } ) => (
+            <td
+              {...props}
+              className="border-r border-border px-3 py-2 align-top whitespace-pre-wrap wrap-break-word last:border-r-0"
+            >
+              {children}
+            </td>
+          ),
         }}
       >
-        {content}
+        {normalized}
       </ReactMarkdown>
     </div>
   )

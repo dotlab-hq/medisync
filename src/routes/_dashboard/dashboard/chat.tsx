@@ -4,6 +4,7 @@ import { ChatSidebarToggle } from '@/components/chat/ChatSidebar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useChatStore } from '@/components/chat/chat-store'
 import { listConversations, deleteConversation, getConversation, renameConversation } from '@/server/chat'
+import { retitleConversation } from '@/server/chat-retitle'
 
 const ChatSidebar = lazy( () => import( '@/components/chat/ChatSidebar' ) )
 const ChatContainer = lazy( () => import( '@/components/chat/ChatContainer' ) )
@@ -14,14 +15,28 @@ type ConversationItem = {
   updatedAt: Date | string
 }
 
-function mergeUniqueConversations(
-  existing: ConversationItem[],
-  incoming: ConversationItem[],
-) {
-  const map = new Map<string, ConversationItem>()
-  for ( const item of existing ) map.set( item.id, item )
-  for ( const item of incoming ) map.set( item.id, item )
-  return Array.from( map.values() )
+type RegenerateMessage = {
+  role: string
+  content: string
+  parts?: Array<Record<string, {}>>
+}
+
+function extractMessageText( message: RegenerateMessage ): string {
+  const fromParts = ( message.parts ?? [] )
+    .filter( ( part ) => 'type' in part && part.type === 'text' )
+    .map( ( part ) => {
+      const content = 'content' in part && typeof part.content === 'string'
+        ? part.content
+        : ''
+      const text = 'text' in part && typeof part.text === 'string'
+        ? part.text
+        : ''
+      return content.length > 0 ? content : text
+    } )
+    .join( '' )
+
+  if ( fromParts.trim().length > 0 ) return fromParts
+  return message.content || ''
 }
 
 export const Route = createFileRoute( '/_dashboard/dashboard/chat' )( {
@@ -112,6 +127,36 @@ function ChatPage() {
     [handleTitleUpdated],
   )
 
+  const handleRegenerateTitle = useCallback(
+    async ( id: string ) => {
+      try {
+        const conv = await getConversation( { data: { id } } )
+        if ( !Array.isArray( conv.messages ) ) return
+
+        const plainMessages = ( conv.messages as RegenerateMessage[] )
+          .map( ( message ) => ( {
+            role: message.role,
+            content: extractMessageText( message ),
+          } ) )
+          .filter( ( message ) => message.content.trim().length > 0 )
+
+        if ( plainMessages.length === 0 ) return
+
+        const { title } = await retitleConversation( {
+          data: { messages: plainMessages },
+        } )
+
+        if ( title && title !== 'New Chat' ) {
+          await renameConversation( { data: { id, title } } )
+          handleTitleUpdated( id, title )
+        }
+      } catch ( err ) {
+        console.error( 'Failed to regenerate title:', err )
+      }
+    },
+    [handleTitleUpdated],
+  )
+
   return (
     <div className="-mx-4 lg:-mx-8 -my-6 relative flex h-screen overflow-hidden">
       <Suspense
@@ -131,6 +176,7 @@ function ChatPage() {
           onSelect={handleSelect}
           onDelete={handleDelete}
           onRename={handleRename}
+          onRegenerateTitle={handleRegenerateTitle}
           onLoadMore={loadMore}
         />
       </Suspense>
