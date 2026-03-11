@@ -14,28 +14,28 @@ import { Badge } from '@/components/ui/badge'
 import { QrCode, RefreshCw, Share2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const LazyQRCodeSVG = lazy( () =>
-  import( 'qrcode.react' ).then( ( mod ) => ( { default: mod.QRCodeSVG } ) ),
+const LazyQRCodeSVG = lazy(() =>
+  import('qrcode.react').then((mod) => ({ default: mod.QRCodeSVG })),
 )
 
-export const Route = createFileRoute( '/_dashboard/dashboard/qr-code' )( {
+export const Route = createFileRoute('/_dashboard/dashboard/qr-code')({
   component: QrCodePage,
-} )
+})
 
 function QrCodePage() {
   const queryClient = useQueryClient()
 
-  const { data: qr, isLoading } = useQuery( {
+  const { data: qr, isLoading } = useQuery({
     queryKey: ['qrCode'],
     queryFn: () => getOrCreateQrCode(),
     enabled: !import.meta.env.SSR,
     retry: false,
-  } )
+  })
 
-  const regen = useMutation( {
+  const regen = useMutation({
     mutationFn: () => regenerateQrCode(),
-    onSuccess: () => queryClient.invalidateQueries( { queryKey: ['qrCode'] } ),
-  } )
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['qrCode'] }),
+  })
 
   const shareUrl = qr
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}${qr.qrCodeData}`
@@ -77,7 +77,7 @@ function QrCodePage() {
                   </Suspense>
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  Created {new Date( qr.createdAt ).toLocaleDateString()}
+                  Created {new Date(qr.createdAt).toLocaleDateString()}
                 </Badge>
               </>
             ) : null}
@@ -96,10 +96,10 @@ function QrCodePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  if ( navigator.share ) {
-                    navigator.share( { url: shareUrl } )
+                  if (navigator.share) {
+                    navigator.share({ url: shareUrl })
                   } else {
-                    navigator.clipboard.writeText( shareUrl )
+                    navigator.clipboard.writeText(shareUrl)
                   }
                 }}
               >

@@ -15,28 +15,27 @@ import {
   getConversation,
 } from '@/server/chat'
 import { retitleConversation } from '@/server/chat-retitle'
-import {
-  createDocument,
-  createFolder,
-  generatePresignedUploadUrl,
-  getPresignedViewUrl,
-  listFolders,
-} from '@/server/documents'
+import { getPresignedViewUrl } from '@/server/documents'
+import type { UploadedAttachment } from './input/attachment-types'
 
 // Pure helper — defined outside to avoid stale-closure issues in deps
 function extractText(
   parts: { type: string; content?: string; text?: string }[],
 ): string {
   return parts
-    .filter( ( p ) => p.type === 'text' )
-    .map( ( p ) => p.content || p.text || '' )
-    .join( '' )
+    .filter((p) => p.type === 'text')
+    .map((p) => p.content || p.text || '')
+    .join('')
 }
 
 /** A message should be saved if it has text content OR tool-call/tool-result parts */
-function shouldSaveMessage( m: { content: string; parts?: Array<Record<string, unknown>> } ): boolean {
-  if ( m.content.trim().length > 0 ) return true
-  if ( m.parts?.some( ( p ) => p.type === 'tool-call' || p.type === 'tool-result' ) ) return true
+function shouldSaveMessage(m: {
+  content: string
+  parts?: Array<Record<string, unknown>>
+}): boolean {
+  if (m.content.trim().length > 0) return true
+  if (m.parts?.some((p) => p.type === 'tool-call' || p.type === 'tool-result'))
+    return true
   return false
 }
 
@@ -56,10 +55,6 @@ type StoredAttachment = {
   url: string
 }
 
-type UploadedAttachment = StoredAttachment & {
-  inlineUrl: string
-}
-
 type DbMessage = {
   id: string
   role: 'user' | 'assistant' | 'system'
@@ -72,240 +67,222 @@ type ConversationPayload = {
   messages: DbMessage[]
 }
 
+function normalizeTextPart(
+  part: Record<string, unknown>,
+): Record<string, unknown> {
+  if (part.type !== 'text') return part
+  const content =
+    typeof part.content === 'string'
+      ? part.content
+      : typeof part.text === 'string'
+        ? part.text
+        : ''
+  return {
+    ...part,
+    content,
+    text: content,
+  }
+}
+
 type ChatMultimodalPart =
   | { type: 'text'; content: string }
   | {
-    type: 'image' | 'document'
-    source: { type: 'url'; value: string; mimeType?: string }
-    metadata: { documentId?: string; name: string; size: number }
-  }
+      type: 'image' | 'document'
+      source: { type: 'url'; value: string; mimeType?: string }
+      metadata: { documentId?: string; name: string; size: number }
+    }
 
 type ChatContainerProps = {
-  onConversationCreated?: ( conv: NewConv ) => void
-  onTitleUpdated?: ( id: string, title: string ) => void
+  onConversationCreated?: (conv: NewConv) => void
+  onTitleUpdated?: (id: string, title: string) => void
   /** If provided, this chatId is loaded immediately on mount (direct URL navigation) */
   initialChatId?: string
 }
 
-export default function ChatContainer( {
+export default function ChatContainer({
   onConversationCreated,
   onTitleUpdated,
   initialChatId,
-}: ChatContainerProps ) {
+}: ChatContainerProps) {
   const { setActiveConversation } = useChatStore()
 
   // URL is the single source of truth for which conversation is active.
   // Store state is only used for sidebar highlighting.
-  const [conversationId, setConversationId] = useState<string | null>( initialChatId ?? null )
+  const [conversationId, setConversationId] = useState<string | null>(
+    initialChatId ?? null,
+  )
+  const [isConversationLoading, setIsConversationLoading] = useState(false)
 
   // Track the assistant message ID we last saved — prevents double-saves
-  const savedMsgIdRef = useRef<string | null>( null )
-  const retitledRef = useRef<Set<string>>( new Set() )
-  const loadedConversationRef = useRef<string | null>( null )
-  const aiFolderIdRef = useRef<string | null>( null )
-  const loadRequestRef = useRef( 0 )
+  const savedMsgIdRef = useRef<string | null>(null)
+  const retitledRef = useRef<Set<string>>(new Set())
+  const loadedConversationRef = useRef<string | null>(null)
+  const loadRequestRef = useRef(0)
 
   // Capture token usage + model from the stream's RUN_FINISHED event
-  const lastUsageRef = useRef<TokenUsageInfo>( {} )
+  const lastUsageRef = useRef<TokenUsageInfo>({})
 
   // Client-side tools for browser-based functionality
-  const chatTools = clientTools( getUserLocationTool )
+  const chatTools = clientTools(getUserLocationTool)
 
-  const { messages, sendMessage, isLoading, setMessages, stop, addToolApprovalResponse } = useChat( {
-    connection: fetchServerSentEvents( '/api/chat' ),
+  const {
+    messages,
+    sendMessage,
+    isLoading,
+    setMessages,
+    stop,
+    addToolApprovalResponse,
+  } = useChat({
+    connection: fetchServerSentEvents('/api/chat'),
     tools: chatTools,
-    onChunk( chunk: StreamChunk ) {
+    onChunk(chunk: StreamChunk) {
       // Capture model from any event that carries it
-      if ( 'model' in chunk && chunk.model ) {
+      if ('model' in chunk && chunk.model) {
         lastUsageRef.current.model = chunk.model
       }
       // RUN_FINISHED carries final token usage
-      if ( chunk.type === 'RUN_FINISHED' && chunk.usage ) {
+      if (chunk.type === 'RUN_FINISHED' && chunk.usage) {
         lastUsageRef.current.promptTokens = chunk.usage.promptTokens
         lastUsageRef.current.completionTokens = chunk.usage.completionTokens
       }
     },
-  } )
+  })
 
-  const clearMessages = useCallback( () => {
-    setMessages( [] )
-  }, [setMessages] )
-
-  const ensureAiFolderId = useCallback( async () => {
-    if ( aiFolderIdRef.current ) return aiFolderIdRef.current
-    const folders = await listFolders()
-    const existing = folders.find( ( folder ) => folder.name.toLowerCase() === 'ai' )
-    if ( existing ) {
-      aiFolderIdRef.current = existing.id
-      return existing.id
-    }
-    const created = await createFolder( { data: { name: 'ai', labels: ['ai'] } } )
-    aiFolderIdRef.current = created.id
-    return created.id
-  }, [] )
-
-  const uploadFilesToAiFolder = useCallback( async ( files: File[] ): Promise<UploadedAttachment[]> => {
-    if ( files.length === 0 ) return []
-    const folderId = await ensureAiFolderId()
-    const uploaded: UploadedAttachment[] = []
-
-    for ( const file of files ) {
-      const contentType = file.type || 'application/octet-stream'
-      const { uploadUrl, s3Key } = await generatePresignedUploadUrl( {
-        data: {
-          fileName: file.name,
-          fileType: contentType,
-          fileSize: file.size,
-        },
-      } )
-
-      await new Promise<void>( ( resolve, reject ) => {
-        const xhr = new XMLHttpRequest()
-        xhr.open( 'PUT', uploadUrl )
-        xhr.setRequestHeader( 'Content-Type', contentType )
-        xhr.onload = () => {
-          if ( xhr.status >= 200 && xhr.status < 300 ) {
-            resolve()
-            return
-          }
-          reject( new Error( `S3 upload failed (${xhr.status})` ) )
-        }
-        xhr.onerror = () => reject( new Error( 'Network error while uploading attachment' ) )
-        xhr.send( file )
-      } )
-
-      const document = await createDocument( {
-        data: {
-          folderId,
-          fileName: file.name,
-          fileType: contentType,
-          fileSize: file.size,
-          s3Key,
-          labels: ['ai'],
-          description: 'Uploaded from chat',
-          isConfidential: false,
-        },
-      } )
-
-      const { url: inlineUrl } = await getPresignedViewUrl( {
-        data: { id: document.id },
-      } )
-
-      uploaded.push( {
-        documentId: document.id,
-        name: document.fileName,
-        type: document.fileType,
-        size: document.fileSize,
-        url: `document:${document.id}`,
-        inlineUrl,
-      } )
-    }
-
-    return uploaded
-  }, [ensureAiFolderId] )
+  const clearMessages = useCallback(() => {
+    setMessages([])
+  }, [setMessages])
 
   // Helper: fetch a conversation from DB and push its messages into useChat state
   const loadConversation = useCallback(
-    ( convId: string ) => {
+    (convId: string) => {
       const requestId = ++loadRequestRef.current
-      getConversation( { data: { id: convId } } )
-        .then( ( conv ) => {
-          if ( loadRequestRef.current !== requestId ) return
+      setIsConversationLoading(true)
+      getConversation({ data: { id: convId } })
+        .then((conv) => {
+          if (loadRequestRef.current !== requestId) return
           try {
             const payload = conv as unknown as ConversationPayload
-            if ( !Array.isArray( payload.messages ) ) {
+            if (!Array.isArray(payload.messages)) {
               throw new Error(
-                `Expected messages to be an array, got ${typeof payload.messages}: ${JSON.stringify( payload.messages )}`,
+                `Expected messages to be an array, got ${typeof payload.messages}: ${JSON.stringify(payload.messages)}`,
               )
             }
             const dbMessages = payload.messages
-            const uiMessages = dbMessages.map( ( msg ) => {
-              const baseParts = Array.isArray( msg.parts ) ? msg.parts : []
+            const uiMessages = dbMessages.map((msg) => {
+              const baseParts = Array.isArray(msg.parts)
+                ? msg.parts.map(normalizeTextPart)
+                : []
               const hasFileParts = baseParts.some(
-                ( part ) => part.type === 'document' || part.type === 'image',
+                (part) => part.type === 'document' || part.type === 'image',
               )
               const normalizedParts = hasFileParts
                 ? baseParts
                 : [
-                  ...baseParts,
-                  ...( msg.attachments ?? [] ).map( ( attachment ) => ( {
-                    type: attachment.type.startsWith( 'image/' ) ? 'image' : 'document',
-                    source: {
-                      type: 'url',
-                      value: attachment.url,
-                      mimeType: attachment.type,
-                    },
-                    metadata: {
-                      documentId: attachment.documentId,
-                      name: attachment.name,
-                      size: attachment.size,
-                    },
-                  } ) ),
-                ]
+                    ...baseParts,
+                    ...(msg.attachments ?? []).map((attachment) => ({
+                      type: attachment.type.startsWith('image/')
+                        ? 'image'
+                        : 'document',
+                      source: {
+                        type: 'url',
+                        value: attachment.url,
+                        mimeType: attachment.type,
+                      },
+                      metadata: {
+                        documentId: attachment.documentId,
+                        name: attachment.name,
+                        size: attachment.size,
+                      },
+                    })),
+                  ]
+
+              const parts =
+                normalizedParts.length > 0
+                  ? normalizedParts
+                  : [{ type: 'text', content: msg.content, text: msg.content }]
+
+              const content =
+                extractText(
+                  parts as Array<{
+                    type: string
+                    content?: string
+                    text?: string
+                  }>,
+                ) || msg.content
 
               return {
                 id: msg.id,
                 role: msg.role,
-                parts:
-                  normalizedParts.length > 0
-                    ? normalizedParts
-                    : [{ type: 'text', content: msg.content }],
+                content,
+                parts,
               }
-            } )
-            setMessages( uiMessages as unknown as Parameters<typeof setMessages>[0] )
+            })
+            setMessages(
+              uiMessages as unknown as Parameters<typeof setMessages>[0],
+            )
             savedMsgIdRef.current = null
-          } catch ( err ) {
-            console.error( 'Error processing conversation data:', err )
-            setMessages( [] )
+          } catch (err) {
+            console.error('Error processing conversation data:', err)
+            setMessages([])
+          } finally {
+            setIsConversationLoading(false)
           }
-        } )
-        .catch( ( err ) => {
-          if ( loadRequestRef.current !== requestId ) return
-          console.error( 'Failed to load conversation:', err )
-          setMessages( [] )
-        } )
+        })
+        .catch((err) => {
+          if (loadRequestRef.current !== requestId) return
+          console.error('Failed to load conversation:', err)
+          setMessages([])
+          setIsConversationLoading(false)
+        })
     },
     [setMessages],
   )
 
-  useEffect( () => {
-    setConversationId( initialChatId ?? null )
-  }, [initialChatId] )
+  useEffect(() => {
+    setConversationId(initialChatId ?? null)
+  }, [initialChatId])
 
   // Load conversation from DB when URL chatId changes.
-  useEffect( () => {
-    if ( !initialChatId ) {
+  useEffect(() => {
+    if (!initialChatId) {
       loadedConversationRef.current = null
-      setActiveConversation( null )
+      setActiveConversation(null)
+      setIsConversationLoading(false)
       clearMessages()
       return
     }
-    if ( loadedConversationRef.current === initialChatId ) {
+    if (loadedConversationRef.current === initialChatId) {
       return
     }
     loadedConversationRef.current = initialChatId
-    setActiveConversation( initialChatId )
-    setMessages( [] )
-    loadConversation( initialChatId )
-  }, [initialChatId, clearMessages, loadConversation, setActiveConversation, setMessages] )
+    setActiveConversation(initialChatId)
+    setMessages([])
+    loadConversation(initialChatId)
+  }, [
+    initialChatId,
+    clearMessages,
+    loadConversation,
+    setActiveConversation,
+    setMessages,
+  ])
 
   // ── Auto-retitle (separate Groq call, best-effort) ─────────────────
   const autoRetitle = useCallback(
-    async ( convId: string, msgs: typeof messages ) => {
-      if ( retitledRef.current.has( convId ) ) return
-      if ( !Array.isArray( msgs ) || msgs.length === 0 ) return
-      retitledRef.current.add( convId )
+    async (convId: string, msgs: typeof messages) => {
+      if (retitledRef.current.has(convId)) return
+      if (!Array.isArray(msgs) || msgs.length === 0) return
+      retitledRef.current.add(convId)
       try {
-        const plainMessages = msgs.map( ( m ) => ( {
+        const plainMessages = msgs.map((m) => ({
           role: m.role,
-          content: extractText( m.parts ),
-        } ) )
-        const { title } = await retitleConversation( {
+          content: extractText(m.parts),
+        }))
+        const { title } = await retitleConversation({
           data: { messages: plainMessages },
-        } )
-        if ( title && title !== 'New Chat' ) {
-          await renameConversation( { data: { id: convId, title } } )
-          onTitleUpdated?.( convId, title )
+        })
+        if (title && title !== 'New Chat') {
+          await renameConversation({ data: { id: convId, title } })
+          onTitleUpdated?.(convId, title)
         }
       } catch {
         // best-effort — swallow errors
@@ -315,26 +292,26 @@ export default function ChatContainer( {
   )
 
   // ── Save messages when the stream completes ───────────────────────
-  useEffect( () => {
-    if ( isLoading ) return // still streaming
-    if ( !conversationId ) return
+  useEffect(() => {
+    if (isLoading) return // still streaming
+    if (!conversationId) return
 
     const currentMessages = messages
-    if ( currentMessages.length === 0 ) return
+    if (currentMessages.length === 0) return
 
     const lastMsg = currentMessages[currentMessages.length - 1]
-    if ( lastMsg.role !== 'assistant' ) return
+    if (lastMsg.role !== 'assistant') return
 
     // De-duplicate: skip if we already persisted this assistant turn
-    if ( savedMsgIdRef.current === lastMsg.id ) return
+    if (savedMsgIdRef.current === lastMsg.id) return
     savedMsgIdRef.current = lastMsg.id
 
     // Extract reasoning from the assistant message parts
     const parts = lastMsg.parts
-    const reasoningParts = parts.filter( ( p ) => p.type === 'thinking' )
+    const reasoningParts = parts.filter((p) => p.type === 'thinking')
     const reasoningText =
       reasoningParts.length > 0
-        ? reasoningParts.map( ( p ) => p.content || '' ).join( '\n' )
+        ? reasoningParts.map((p) => p.content || '').join('\n')
         : null
 
     // Grab captured token usage from the stream
@@ -342,7 +319,7 @@ export default function ChatContainer( {
 
     const row = {
       role: 'assistant',
-      content: extractText( lastMsg.parts ),
+      content: extractText(lastMsg.parts),
       reasoning: reasoningText,
       parts: lastMsg.parts as unknown as Array<Record<string, unknown>>,
       inputTokens: usage.promptTokens ?? null,
@@ -353,50 +330,50 @@ export default function ChatContainer( {
     // Reset usage for next turn
     lastUsageRef.current = {}
 
-    const rows = shouldSaveMessage( { content: row.content, parts: row.parts } ) ? [row] : []
-    if ( rows.length > 0 ) {
-      saveMessages( {
+    const rows = shouldSaveMessage({ content: row.content, parts: row.parts })
+      ? [row]
+      : []
+    if (rows.length > 0) {
+      saveMessages({
         data: { conversationId: conversationId, messages: rows },
-      } )
-        .then( ( result ) => {
+      })
+        .then((result) => {
           const insertedAssistant = result.inserted?.find(
-            ( m ) => m.role === 'assistant',
+            (m) => m.role === 'assistant',
           )
-          if ( !insertedAssistant?.id ) return
+          if (!insertedAssistant?.id) return
 
           // Replace client-side streamed ID with DB ID so feedback actions use a valid message ID.
           setMessages(
-            currentMessages.map( ( m ) =>
+            currentMessages.map((m) =>
               m.id === lastMsg.id ? { ...m, id: insertedAssistant.id } : m,
             ),
           )
           savedMsgIdRef.current = insertedAssistant.id
-        } )
-        .catch( () => { } )
+        })
+        .catch(() => {})
     }
 
     // Trigger retitle after the very first assistant reply
-    if ( currentMessages.filter( ( m ) => m.role === 'assistant' ).length === 1 ) {
-      autoRetitle( conversationId, currentMessages )
+    if (currentMessages.filter((m) => m.role === 'assistant').length === 1) {
+      autoRetitle(conversationId, currentMessages)
     }
-  }, [isLoading, conversationId, messages, autoRetitle, setMessages] )
+  }, [isLoading, conversationId, messages, autoRetitle, setMessages])
 
   // ── Send (auto-creates conversation if none selected) ────────────
   const handleSend = useCallback(
-    async ( text: string, files?: File[] ) => {
+    async (text: string, uploadedAttachments?: UploadedAttachment[]) => {
       let convId = conversationId
       const trimmedText = text.trim()
-      const uploadedAttachments = files?.length
-        ? await uploadFilesToAiFolder( files )
-        : []
+      const attachments = uploadedAttachments ?? []
 
       const multimodalParts: ChatMultimodalPart[] = []
-      if ( trimmedText ) {
-        multimodalParts.push( { type: 'text', content: trimmedText } )
+      if (trimmedText) {
+        multimodalParts.push({ type: 'text', content: trimmedText })
       }
-      for ( const attachment of uploadedAttachments ) {
-        multimodalParts.push( {
-          type: attachment.type.startsWith( 'image/' ) ? 'image' : 'document',
+      for (const attachment of attachments) {
+        multimodalParts.push({
+          type: attachment.type.startsWith('image/') ? 'image' : 'document',
           source: {
             type: 'url',
             value: attachment.inlineUrl,
@@ -407,45 +384,50 @@ export default function ChatContainer( {
             name: attachment.name,
             size: attachment.size,
           },
-        } )
+        })
       }
 
-      const storedAttachments: StoredAttachment[] = uploadedAttachments.map( ( attachment ) => ( {
-        documentId: attachment.documentId,
-        name: attachment.name,
-        type: attachment.type,
-        size: attachment.size,
-        url: attachment.url,
-      } ) )
+      const storedAttachments: StoredAttachment[] = attachments.map(
+        (attachment) => ({
+          documentId: attachment.documentId,
+          name: attachment.name,
+          type: attachment.type,
+          size: attachment.size,
+          url: attachment.url,
+        }),
+      )
 
       const contentToPersist = trimmedText || 'Attachment message'
-      const partsToPersist: Array<Record<string, unknown>> = multimodalParts.length > 0
-        ? multimodalParts.map( ( part ) => part as unknown as Record<string, unknown> )
-        : [{ type: 'text', content: contentToPersist }]
+      const partsToPersist: Array<Record<string, unknown>> =
+        multimodalParts.length > 0
+          ? multimodalParts.map(
+              (part) => part as unknown as Record<string, unknown>,
+            )
+          : [{ type: 'text', content: contentToPersist }]
 
-      if ( !convId ) {
+      if (!convId) {
         // Create conversation + first user message atomically.
-        const result = ( await createConversationAndSend( {
+        const result = (await createConversationAndSend({
           data: {
             content: contentToPersist,
             parts: partsToPersist,
             attachments: storedAttachments,
           },
-        } ) ) as { conversation: { id: string; title: string }; message: unknown }
+        })) as { conversation: { id: string; title: string }; message: unknown }
         convId = result.conversation.id
 
         // Update local state + sidebar highlight (URL will change via onConversationCreated)
-        setConversationId( convId )
-        setActiveConversation( convId )
+        setConversationId(convId)
+        setActiveConversation(convId)
 
         // Pass full object so parent can optimistically prepend at top
-        onConversationCreated?.( {
+        onConversationCreated?.({
           id: result.conversation.id,
           title: result.conversation.title,
           updatedAt: new Date(),
-        } )
+        })
       } else {
-        await saveMessages( {
+        await saveMessages({
           data: {
             conversationId: convId,
             messages: [
@@ -457,7 +439,7 @@ export default function ChatContainer( {
               },
             ],
           },
-        } )
+        })
       }
 
       const contentForModel: string | MultimodalContent =
@@ -465,67 +447,69 @@ export default function ChatContainer( {
           ? trimmedText
           : { content: multimodalParts as unknown as ContentPart[] }
 
-      await sendMessage( contentForModel )
+      await sendMessage(contentForModel)
     },
-    [
-      conversationId,
-      setActiveConversation,
-      sendMessage,
-      onConversationCreated,
-      uploadFilesToAiFolder,
-    ],
+    [conversationId, setActiveConversation, sendMessage, onConversationCreated],
   )
 
   const handleOpenAttachment = useCallback(
-    async ( attachment: StoredAttachment ) => {
+    async (attachment: StoredAttachment) => {
       const documentId =
         attachment.documentId ||
-        ( attachment.url.startsWith( 'document:' )
-          ? attachment.url.replace( 'document:', '' )
-          : null )
+        (attachment.url.startsWith('document:')
+          ? attachment.url.replace('document:', '')
+          : null)
 
-      if ( documentId ) {
-        const { url } = await getPresignedViewUrl( { data: { id: documentId } } )
-        window.open( url, '_blank', 'noopener,noreferrer' )
+      if (documentId) {
+        const { url } = await getPresignedViewUrl({ data: { id: documentId } })
+        window.open(url, '_blank', 'noopener,noreferrer')
         return
       }
 
-      if ( attachment.url ) {
-        window.open( attachment.url, '_blank', 'noopener,noreferrer' )
+      if (attachment.url) {
+        window.open(attachment.url, '_blank', 'noopener,noreferrer')
       }
     },
     [],
   )
 
   const lastAssistantMessage = messages
-    .filter( ( m ) => m.role === 'assistant' )
-    .at( -1 )
+    .filter((m) => m.role === 'assistant')
+    .at(-1)
 
   const lastAssistantText =
     lastAssistantMessage?.parts
-      .filter( ( p ) => p.type === 'text' )
-      .map( ( p ) => p.content || '' )
-      .join( '' ) ?? ''
+      .filter((p) => p.type === 'text')
+      .map((p) => p.content || '')
+      .join('') ?? ''
 
   return (
     <div className="flex h-full flex-col">
       <ChatMessages
-        messages={messages as unknown as Parameters<typeof ChatMessages>[0]['messages']}
-        isLoading={isLoading}
+        messages={
+          messages as unknown as Parameters<typeof ChatMessages>[0]['messages']
+        }
+        isLoading={isLoading || isConversationLoading}
         onToolApproval={addToolApprovalResponse}
         onOpenAttachment={handleOpenAttachment}
       />
 
-      {lastAssistantText && lastAssistantMessage?.id && !isLoading && (
-        <div className="flex justify-end px-4 pb-1">
-          <TTSButton
-            messageId={lastAssistantMessage.id}
-            text={lastAssistantText}
-          />
-        </div>
-      )}
+      {lastAssistantText &&
+        lastAssistantMessage?.id &&
+        !(isLoading || isConversationLoading) && (
+          <div className="flex justify-end px-4 pb-1">
+            <TTSButton
+              messageId={lastAssistantMessage.id}
+              text={lastAssistantText}
+            />
+          </div>
+        )}
 
-      <ChatInput onSend={handleSend} onStop={stop} disabled={isLoading} />
+      <ChatInput
+        onSend={handleSend}
+        onStop={stop}
+        disabled={isLoading || isConversationLoading}
+      />
     </div>
   )
 }

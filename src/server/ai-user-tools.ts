@@ -3,7 +3,7 @@ import { db } from '@/db'
 import { userStorage } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 
-export const getCurrentUserInfoDef = toolDefinition( {
+export const getCurrentUserInfoDef = toolDefinition({
   name: 'get_current_user_info',
   description:
     "Fetch the current user's profile, medical information, and storage quota usage. Use this when the user asks about their account details or storage limits.",
@@ -28,7 +28,16 @@ export const getCurrentUserInfoDef = toolDefinition( {
           bloodGroup: { type: ['string', 'null'] },
           timezone: { type: 'string' },
         },
-        required: ['id', 'name', 'email', 'phone', 'gender', 'dateOfBirth', 'bloodGroup', 'timezone'],
+        required: [
+          'id',
+          'name',
+          'email',
+          'phone',
+          'gender',
+          'dateOfBirth',
+          'bloodGroup',
+          'timezone',
+        ],
         additionalProperties: false,
       },
       medical: {
@@ -55,19 +64,19 @@ export const getCurrentUserInfoDef = toolDefinition( {
     required: ['profile', 'medical', 'storage'],
     additionalProperties: false,
   },
-} )
+})
 
-export function createGetCurrentUserInfoTool( userId: string ) {
-  return getCurrentUserInfoDef.server( async () => {
-    const userRecord = await db.query.user.findFirst( {
-      where: ( user, { eq } ) => eq( user.id, userId ),
+export function createGetCurrentUserInfoTool(userId: string) {
+  return getCurrentUserInfoDef.server(async () => {
+    const userRecord = await db.query.user.findFirst({
+      where: (user, { eq }) => eq(user.id, userId),
       with: { medicalInformation: true },
-    } )
-    if ( !userRecord ) throw new Error( 'User not found' )
+    })
+    if (!userRecord) throw new Error('User not found')
 
-    const storage = await db.query.userStorage.findFirst( {
-      where: eq( userStorage.userId, userId ),
-    } )
+    const storage = await db.query.userStorage.findFirst({
+      where: eq(userStorage.userId, userId),
+    })
 
     const usedBytes = storage?.usedBytes ?? 0
     const quotaBytes = storage?.quotaBytes ?? 104857600
@@ -85,14 +94,16 @@ export function createGetCurrentUserInfoTool( userId: string ) {
       },
       medical: {
         allergies: userRecord.medicalInformation?.allergies ?? null,
-        chronicConditions: userRecord.medicalInformation?.chronicConditions ?? null,
-        currentMedications: userRecord.medicalInformation?.currentMedications ?? null,
+        chronicConditions:
+          userRecord.medicalInformation?.chronicConditions ?? null,
+        currentMedications:
+          userRecord.medicalInformation?.currentMedications ?? null,
       },
       storage: {
         usedBytes,
         quotaBytes,
-        remainingBytes: Math.max( quotaBytes - usedBytes, 0 ),
+        remainingBytes: Math.max(quotaBytes - usedBytes, 0),
       },
     }
-  } )
+  })
 }

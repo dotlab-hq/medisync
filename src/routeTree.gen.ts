@@ -32,7 +32,6 @@ import { Route as DashboardDashboardIndexRouteImport } from './routes/_dashboard
 import { Route as ApiCronNotifyRemindersRouteImport } from './routes/api/cron/notify-reminders'
 import { Route as ApiCronNotifyAppointmentsRouteImport } from './routes/api/cron/notify-appointments'
 import { Route as ApiChatTtsRouteImport } from './routes/api/chat/tts'
-import { Route as ApiChatTranscribeRouteImport } from './routes/api/chat/transcribe'
 import { Route as ApiChatRetitleRouteImport } from './routes/api/chat/retitle'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardDashboardSettingsRouteImport } from './routes/_dashboard/dashboard/settings'
@@ -42,9 +41,9 @@ import { Route as DashboardDashboardProfileRouteImport } from './routes/_dashboa
 import { Route as DashboardDashboardHealthRouteImport } from './routes/_dashboard/dashboard/health'
 import { Route as DashboardDashboardDocumentsRouteImport } from './routes/_dashboard/dashboard/documents'
 import { Route as DashboardDashboardDeveloperRouteImport } from './routes/_dashboard/dashboard/developer'
-import { Route as DashboardDashboardChatRouteImport } from './routes/_dashboard/dashboard/chat'
 import { Route as DashboardDashboardAppointmentsRouteImport } from './routes/_dashboard/dashboard/appointments'
-import { Route as DashboardDashboardChatChatIdRouteImport } from './routes/_dashboard/dashboard/chat.$chatId'
+import { Route as DashboardDashboardChatIndexRouteImport } from './routes/_dashboard/dashboard/chat/index'
+import { Route as DashboardDashboardChatChatIdRouteImport } from './routes/_dashboard/dashboard/chat/$chatId'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -160,11 +159,6 @@ const ApiChatTtsRoute = ApiChatTtsRouteImport.update({
   path: '/api/chat/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChatTranscribeRoute = ApiChatTranscribeRouteImport.update({
-  id: '/api/chat/transcribe',
-  path: '/api/chat/transcribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiChatRetitleRoute = ApiChatRetitleRouteImport.update({
   id: '/api/chat/retitle',
   path: '/api/chat/retitle',
@@ -217,22 +211,23 @@ const DashboardDashboardDeveloperRoute =
     path: '/dashboard/developer',
     getParentRoute: () => DashboardRoute,
   } as any)
-const DashboardDashboardChatRoute = DashboardDashboardChatRouteImport.update({
-  id: '/dashboard/chat',
-  path: '/dashboard/chat',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardDashboardAppointmentsRoute =
   DashboardDashboardAppointmentsRouteImport.update({
     id: '/dashboard/appointments',
     path: '/dashboard/appointments',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardDashboardChatIndexRoute =
+  DashboardDashboardChatIndexRouteImport.update({
+    id: '/dashboard/chat/',
+    path: '/dashboard/chat/',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardDashboardChatChatIdRoute =
   DashboardDashboardChatChatIdRouteImport.update({
-    id: '/$chatId',
-    path: '/$chatId',
-    getParentRoute: () => DashboardDashboardChatRoute,
+    id: '/dashboard/chat/$chatId',
+    path: '/dashboard/chat/$chatId',
+    getParentRoute: () => DashboardRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -253,7 +248,6 @@ export interface FileRoutesByFullPath {
   '/emergency/$token': typeof EmergencyTokenRoute
   '/auth/': typeof AuthIndexRoute
   '/dashboard/appointments': typeof DashboardDashboardAppointmentsRoute
-  '/dashboard/chat': typeof DashboardDashboardChatRouteWithChildren
   '/dashboard/developer': typeof DashboardDashboardDeveloperRoute
   '/dashboard/documents': typeof DashboardDashboardDocumentsRoute
   '/dashboard/health': typeof DashboardDashboardHealthRoute
@@ -263,13 +257,13 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
-  '/api/chat/transcribe': typeof ApiChatTranscribeRoute
   '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
   '/api/cron/notify-reminders': typeof ApiCronNotifyRemindersRoute
   '/dashboard/': typeof DashboardDashboardIndexRoute
   '/api/chat/': typeof ApiChatIndexRoute
   '/dashboard/chat/$chatId': typeof DashboardDashboardChatChatIdRoute
+  '/dashboard/chat/': typeof DashboardDashboardChatIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -288,7 +282,6 @@ export interface FileRoutesByTo {
   '/emergency/$token': typeof EmergencyTokenRoute
   '/auth': typeof AuthIndexRoute
   '/dashboard/appointments': typeof DashboardDashboardAppointmentsRoute
-  '/dashboard/chat': typeof DashboardDashboardChatRouteWithChildren
   '/dashboard/developer': typeof DashboardDashboardDeveloperRoute
   '/dashboard/documents': typeof DashboardDashboardDocumentsRoute
   '/dashboard/health': typeof DashboardDashboardHealthRoute
@@ -298,13 +291,13 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
-  '/api/chat/transcribe': typeof ApiChatTranscribeRoute
   '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
   '/api/cron/notify-reminders': typeof ApiCronNotifyRemindersRoute
   '/dashboard': typeof DashboardDashboardIndexRoute
   '/api/chat': typeof ApiChatIndexRoute
   '/dashboard/chat/$chatId': typeof DashboardDashboardChatChatIdRoute
+  '/dashboard/chat': typeof DashboardDashboardChatIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -327,7 +320,6 @@ export interface FileRoutesById {
   '/_public/': typeof PublicIndexRoute
   '/auth/': typeof AuthIndexRoute
   '/_dashboard/dashboard/appointments': typeof DashboardDashboardAppointmentsRoute
-  '/_dashboard/dashboard/chat': typeof DashboardDashboardChatRouteWithChildren
   '/_dashboard/dashboard/developer': typeof DashboardDashboardDeveloperRoute
   '/_dashboard/dashboard/documents': typeof DashboardDashboardDocumentsRoute
   '/_dashboard/dashboard/health': typeof DashboardDashboardHealthRoute
@@ -337,13 +329,13 @@ export interface FileRoutesById {
   '/_dashboard/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
-  '/api/chat/transcribe': typeof ApiChatTranscribeRoute
   '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
   '/api/cron/notify-reminders': typeof ApiCronNotifyRemindersRoute
   '/_dashboard/dashboard/': typeof DashboardDashboardIndexRoute
   '/api/chat/': typeof ApiChatIndexRoute
   '/_dashboard/dashboard/chat/$chatId': typeof DashboardDashboardChatChatIdRoute
+  '/_dashboard/dashboard/chat/': typeof DashboardDashboardChatIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -365,7 +357,6 @@ export interface FileRouteTypes {
     | '/emergency/$token'
     | '/auth/'
     | '/dashboard/appointments'
-    | '/dashboard/chat'
     | '/dashboard/developer'
     | '/dashboard/documents'
     | '/dashboard/health'
@@ -375,13 +366,13 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/api/auth/$'
     | '/api/chat/retitle'
-    | '/api/chat/transcribe'
     | '/api/chat/tts'
     | '/api/cron/notify-appointments'
     | '/api/cron/notify-reminders'
     | '/dashboard/'
     | '/api/chat/'
     | '/dashboard/chat/$chatId'
+    | '/dashboard/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -400,7 +391,6 @@ export interface FileRouteTypes {
     | '/emergency/$token'
     | '/auth'
     | '/dashboard/appointments'
-    | '/dashboard/chat'
     | '/dashboard/developer'
     | '/dashboard/documents'
     | '/dashboard/health'
@@ -410,13 +400,13 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/api/auth/$'
     | '/api/chat/retitle'
-    | '/api/chat/transcribe'
     | '/api/chat/tts'
     | '/api/cron/notify-appointments'
     | '/api/cron/notify-reminders'
     | '/dashboard'
     | '/api/chat'
     | '/dashboard/chat/$chatId'
+    | '/dashboard/chat'
   id:
     | '__root__'
     | '/_dashboard'
@@ -438,7 +428,6 @@ export interface FileRouteTypes {
     | '/_public/'
     | '/auth/'
     | '/_dashboard/dashboard/appointments'
-    | '/_dashboard/dashboard/chat'
     | '/_dashboard/dashboard/developer'
     | '/_dashboard/dashboard/documents'
     | '/_dashboard/dashboard/health'
@@ -448,13 +437,13 @@ export interface FileRouteTypes {
     | '/_dashboard/dashboard/settings'
     | '/api/auth/$'
     | '/api/chat/retitle'
-    | '/api/chat/transcribe'
     | '/api/chat/tts'
     | '/api/cron/notify-appointments'
     | '/api/cron/notify-reminders'
     | '/_dashboard/dashboard/'
     | '/api/chat/'
     | '/_dashboard/dashboard/chat/$chatId'
+    | '/_dashboard/dashboard/chat/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -465,7 +454,6 @@ export interface RootRouteChildren {
   EmergencyTokenRoute: typeof EmergencyTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiChatRetitleRoute: typeof ApiChatRetitleRoute
-  ApiChatTranscribeRoute: typeof ApiChatTranscribeRoute
   ApiChatTtsRoute: typeof ApiChatTtsRoute
   ApiCronNotifyAppointmentsRoute: typeof ApiCronNotifyAppointmentsRoute
   ApiCronNotifyRemindersRoute: typeof ApiCronNotifyRemindersRoute
@@ -635,13 +623,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat/transcribe': {
-      id: '/api/chat/transcribe'
-      path: '/api/chat/transcribe'
-      fullPath: '/api/chat/transcribe'
-      preLoaderRoute: typeof ApiChatTranscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/chat/retitle': {
       id: '/api/chat/retitle'
       path: '/api/chat/retitle'
@@ -705,13 +686,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDashboardDeveloperRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/dashboard/chat': {
-      id: '/_dashboard/dashboard/chat'
-      path: '/dashboard/chat'
-      fullPath: '/dashboard/chat'
-      preLoaderRoute: typeof DashboardDashboardChatRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/_dashboard/dashboard/appointments': {
       id: '/_dashboard/dashboard/appointments'
       path: '/dashboard/appointments'
@@ -719,33 +693,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDashboardAppointmentsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/dashboard/chat/': {
+      id: '/_dashboard/dashboard/chat/'
+      path: '/dashboard/chat'
+      fullPath: '/dashboard/chat/'
+      preLoaderRoute: typeof DashboardDashboardChatIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/dashboard/chat/$chatId': {
       id: '/_dashboard/dashboard/chat/$chatId'
-      path: '/$chatId'
+      path: '/dashboard/chat/$chatId'
       fullPath: '/dashboard/chat/$chatId'
       preLoaderRoute: typeof DashboardDashboardChatChatIdRouteImport
-      parentRoute: typeof DashboardDashboardChatRoute
+      parentRoute: typeof DashboardRoute
     }
   }
 }
 
-interface DashboardDashboardChatRouteChildren {
-  DashboardDashboardChatChatIdRoute: typeof DashboardDashboardChatChatIdRoute
-}
-
-const DashboardDashboardChatRouteChildren: DashboardDashboardChatRouteChildren =
-  {
-    DashboardDashboardChatChatIdRoute: DashboardDashboardChatChatIdRoute,
-  }
-
-const DashboardDashboardChatRouteWithChildren =
-  DashboardDashboardChatRoute._addFileChildren(
-    DashboardDashboardChatRouteChildren,
-  )
-
 interface DashboardRouteChildren {
   DashboardDashboardAppointmentsRoute: typeof DashboardDashboardAppointmentsRoute
-  DashboardDashboardChatRoute: typeof DashboardDashboardChatRouteWithChildren
   DashboardDashboardDeveloperRoute: typeof DashboardDashboardDeveloperRoute
   DashboardDashboardDocumentsRoute: typeof DashboardDashboardDocumentsRoute
   DashboardDashboardHealthRoute: typeof DashboardDashboardHealthRoute
@@ -754,11 +720,12 @@ interface DashboardRouteChildren {
   DashboardDashboardRemindersRoute: typeof DashboardDashboardRemindersRoute
   DashboardDashboardSettingsRoute: typeof DashboardDashboardSettingsRoute
   DashboardDashboardIndexRoute: typeof DashboardDashboardIndexRoute
+  DashboardDashboardChatChatIdRoute: typeof DashboardDashboardChatChatIdRoute
+  DashboardDashboardChatIndexRoute: typeof DashboardDashboardChatIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDashboardAppointmentsRoute: DashboardDashboardAppointmentsRoute,
-  DashboardDashboardChatRoute: DashboardDashboardChatRouteWithChildren,
   DashboardDashboardDeveloperRoute: DashboardDashboardDeveloperRoute,
   DashboardDashboardDocumentsRoute: DashboardDashboardDocumentsRoute,
   DashboardDashboardHealthRoute: DashboardDashboardHealthRoute,
@@ -767,6 +734,8 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDashboardRemindersRoute: DashboardDashboardRemindersRoute,
   DashboardDashboardSettingsRoute: DashboardDashboardSettingsRoute,
   DashboardDashboardIndexRoute: DashboardDashboardIndexRoute,
+  DashboardDashboardChatChatIdRoute: DashboardDashboardChatChatIdRoute,
+  DashboardDashboardChatIndexRoute: DashboardDashboardChatIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -824,7 +793,6 @@ const rootRouteChildren: RootRouteChildren = {
   EmergencyTokenRoute: EmergencyTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiChatRetitleRoute: ApiChatRetitleRoute,
-  ApiChatTranscribeRoute: ApiChatTranscribeRoute,
   ApiChatTtsRoute: ApiChatTtsRoute,
   ApiCronNotifyAppointmentsRoute: ApiCronNotifyAppointmentsRoute,
   ApiCronNotifyRemindersRoute: ApiCronNotifyRemindersRoute,

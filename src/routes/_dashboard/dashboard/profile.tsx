@@ -14,9 +14,9 @@ import {
   AddressCard,
 } from '@/components/dashboard/ProfileFormCards'
 
-export const Route = createFileRoute( '/_dashboard/dashboard/profile' )( {
+export const Route = createFileRoute('/_dashboard/dashboard/profile')({
   component: ProfilePage,
-} )
+})
 
 function ProfileSkeleton() {
   return (
@@ -31,61 +31,61 @@ function ProfileSkeleton() {
 
 function ProfilePage() {
   const queryClient = useQueryClient()
-  const { data: profile, isLoading } = useQuery( {
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['userProfile'],
     queryFn: () => getUserProfile(),
     enabled: !import.meta.env.SSR,
     retry: false,
-  } )
+  })
 
-  const [success, setSuccess] = useState( '' )
-  const [phoneDialogOpen, setPhoneDialogOpen] = useState( false )
+  const [success, setSuccess] = useState('')
+  const [phoneDialogOpen, setPhoneDialogOpen] = useState(false)
 
-  const updateMut = useMutation( {
+  const updateMut = useMutation({
     mutationFn: updateUser,
     onSuccess: () => {
-      queryClient.invalidateQueries( { queryKey: ['userProfile'] } )
-      setSuccess( 'Profile updated' )
-      setTimeout( () => setSuccess( '' ), 3000 )
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] })
+      setSuccess('Profile updated')
+      setTimeout(() => setSuccess(''), 3000)
     },
-  } )
+  })
 
-  const addressMut = useMutation( {
+  const addressMut = useMutation({
     mutationFn: upsertAddress,
     onSuccess: () => {
-      queryClient.invalidateQueries( { queryKey: ['userProfile'] } )
-      setSuccess( 'Address updated' )
-      setTimeout( () => setSuccess( '' ), 3000 )
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] })
+      setSuccess('Address updated')
+      setTimeout(() => setSuccess(''), 3000)
     },
-  } )
+  })
 
-  if ( isLoading ) return <ProfileSkeleton />
+  if (isLoading) return <ProfileSkeleton />
 
-  const handlePersonal = ( e: React.FormEvent<HTMLFormElement> ) => {
+  const handlePersonal = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const fd = new FormData( e.currentTarget )
-    updateMut.mutate( {
+    const fd = new FormData(e.currentTarget)
+    updateMut.mutate({
       data: {
-        name: fd.get( 'name' ) as string,
-        gender: ( fd.get( 'gender' ) as string ) || undefined,
-        dateOfBirth: ( fd.get( 'dateOfBirth' ) as string ) || undefined,
-        bloodGroup: ( fd.get( 'bloodGroup' ) as string ) || undefined,
-        timezone: ( fd.get( 'timezone' ) as string ) || undefined,
+        name: fd.get('name') as string,
+        gender: (fd.get('gender') as string) || undefined,
+        dateOfBirth: (fd.get('dateOfBirth') as string) || undefined,
+        bloodGroup: (fd.get('bloodGroup') as string) || undefined,
+        timezone: (fd.get('timezone') as string) || undefined,
       },
-    } )
+    })
   }
 
-  const handleAddress = ( e: React.FormEvent<HTMLFormElement> ) => {
+  const handleAddress = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const fd = new FormData( e.currentTarget )
-    addressMut.mutate( {
+    const fd = new FormData(e.currentTarget)
+    addressMut.mutate({
       data: {
-        address: fd.get( 'address' ) as string,
-        city: fd.get( 'city' ) as string,
-        state: fd.get( 'state' ) as string,
-        pinCode: fd.get( 'pinCode' ) as string,
+        address: fd.get('address') as string,
+        city: fd.get('city') as string,
+        state: fd.get('state') as string,
+        pinCode: fd.get('pinCode') as string,
       },
-    } )
+    })
   }
 
   return (
@@ -101,7 +101,7 @@ function ProfilePage() {
       <AvatarSection
         imageUrl={profile?.image ?? ''}
         isPending={updateMut.isPending}
-        onSave={( url ) => updateMut.mutate( { data: { image: url } } )}
+        onSave={(url) => updateMut.mutate({ data: { image: url } })}
       />
 
       <Tabs defaultValue="personal">
@@ -117,7 +117,7 @@ function ProfilePage() {
             profile={profile}
             isPending={updateMut.isPending}
             onSubmit={handlePersonal}
-            onPhoneChange={() => setPhoneDialogOpen( true )}
+            onPhoneChange={() => setPhoneDialogOpen(true)}
           />
         </TabsContent>
         <TabsContent value="address">
@@ -140,9 +140,9 @@ function ProfilePage() {
         currentPhone={profile?.phone ?? ''}
         onOpenChange={setPhoneDialogOpen}
         onSuccess={() => {
-          queryClient.invalidateQueries( { queryKey: ['userProfile'] } )
-          setSuccess( 'Phone number updated' )
-          setTimeout( () => setSuccess( '' ), 3000 )
+          queryClient.invalidateQueries({ queryKey: ['userProfile'] })
+          setSuccess('Phone number updated')
+          setTimeout(() => setSuccess(''), 3000)
         }}
       />
     </div>

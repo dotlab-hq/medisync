@@ -3,7 +3,6 @@ name: tanstack-ai
 description: Provider-agnostic, type-safe AI SDK for streaming, tool calling, structured output, and multimodal content.
 ---
 
-
 ## Overview
 
 TanStack AI is a modular, provider-agnostic AI SDK with tree-shakeable adapters for OpenAI, Anthropic, Gemini, Ollama, and more. It provides streaming-first text generation, tool calling with approval workflows, structured output with Zod schemas, multimodal content support, and React hooks for chat/completion UIs.
@@ -125,9 +124,10 @@ function ChatUI() {
 import { useCompletion } from '@tanstack/ai-react'
 
 function CompletionUI() {
-  const { completion, input, setInput, handleSubmit, isLoading } = useCompletion({
-    adapter: openaiText({ model: 'gpt-4o' }),
-  })
+  const { completion, input, setInput, handleSubmit, isLoading } =
+    useCompletion({
+      adapter: openaiText({ model: 'gpt-4o' }),
+    })
 
   return (
     <div>
@@ -137,7 +137,9 @@ function CompletionUI() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Enter prompt..."
         />
-        <button type="submit" disabled={isLoading}>Generate</button>
+        <button type="submit" disabled={isLoading}>
+          Generate
+        </button>
       </form>
       {completion && <div>{completion}</div>}
     </div>
@@ -225,6 +227,7 @@ for await (const chunk of result) {
 ```
 
 Available streaming strategies:
+
 - **Batch** - Collect all chunks before delivery
 - **Punctuation** - Stream at sentence boundaries
 - **WordBoundary** - Stream at word boundaries
@@ -257,10 +260,12 @@ import { z } from 'zod'
 
 const RecipeSchema = z.object({
   name: z.string(),
-  ingredients: z.array(z.object({
-    item: z.string(),
-    amount: z.string(),
-  })),
+  ingredients: z.array(
+    z.object({
+      item: z.string(),
+      amount: z.string(),
+    }),
+  ),
   steps: z.array(z.string()),
   cookTime: z.number(),
 })
@@ -342,13 +347,18 @@ const result = await generate({
 // Images
 const result = await generate({
   adapter: openaiText({ model: 'gpt-4o' }),
-  messages: [{
-    role: 'user',
-    content: [
-      { type: 'text', text: 'What is in this image?' },
-      { type: 'image_url', image_url: { url: 'https://example.com/photo.jpg' } },
-    ],
-  }],
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What is in this image?' },
+        {
+          type: 'image_url',
+          image_url: { url: 'https://example.com/photo.jpg' },
+        },
+      ],
+    },
+  ],
 })
 
 // Image generation with DALL-E
@@ -378,7 +388,12 @@ import { anthropicText } from '@tanstack/ai-anthropic/adapters'
 
 const result = await generate({
   adapter: anthropicText({ model: 'claude-sonnet-4-20250514' }),
-  messages: [{ role: 'user', content: 'Solve this complex math problem step by step...' }],
+  messages: [
+    {
+      role: 'user',
+      content: 'Solve this complex math problem step by step...',
+    },
+  ],
   thinking: {
     enabled: true,
     budget: 10000, // Max thinking tokens
@@ -458,6 +473,7 @@ function App() {
 ```
 
 AI Devtools features:
+
 - **Message Inspector** - View full conversation history with metadata
 - **Token Usage** - Track input/output tokens and costs per request
 - **Streaming Visualization** - Real-time view of streaming chunks
@@ -492,7 +508,9 @@ For streaming structured output that arrives incrementally:
 import { parsePartialJson } from '@tanstack/ai'
 
 // Parse incomplete JSON during streaming
-const partial = parsePartialJson('{"name": "Pasta", "ingredients": [{"item": "flour"')
+const partial = parsePartialJson(
+  '{"name": "Pasta", "ingredients": [{"item": "flour"',
+)
 // Returns: { name: "Pasta", ingredients: [{ item: "flour" }] }
 ```
 

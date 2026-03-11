@@ -8,92 +8,92 @@ import { getRequest } from '@tanstack/react-start/server'
 import { toUtcDate } from '@/lib/to-utc'
 
 // ── List reminders ───────────────────────────────────────────────────
-export const listReminders = createServerFn( { method: 'GET' } ).handler(
+export const listReminders = createServerFn({ method: 'GET' }).handler(
   async () => {
     const request = getRequest()
-    const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
+    const sessionData = await auth.api.getSession({ headers: request.headers })
+    if (!sessionData?.user.id) throw new Error('Unauthorized')
     const userId = sessionData.user.id
 
-    return db.query.reminder.findMany( {
-      where: eq( reminder.userId, userId ),
-      orderBy: desc( reminder.createdAt ),
-    } )
+    return db.query.reminder.findMany({
+      where: eq(reminder.userId, userId),
+      orderBy: desc(reminder.createdAt),
+    })
   },
 )
 
 // ── Create reminder ──────────────────────────────────────────────────
-const createReminderSchema = z.object( {
-  title: z.string().min( 1 ),
+const createReminderSchema = z.object({
+  title: z.string().min(1),
   description: z.string().optional(),
-  type: z.enum( ['medication', 'appointment', 'checkup', 'other'] ).optional(),
-  date: z.string().min( 1 ),
-  time: z.string().min( 1, 'Time is required' ),
+  type: z.enum(['medication', 'appointment', 'checkup', 'other']).optional(),
+  date: z.string().min(1),
+  time: z.string().min(1, 'Time is required'),
   // Browser timezone passed from client; falls back to user profile timezone
   timezone: z.string().optional(),
-} )
+})
 
-export const createReminder = createServerFn( { method: 'POST' } )
-  .inputValidator( ( data: unknown ) => createReminderSchema.parse( data ) )
-  .handler( async ( { data } ) => {
+export const createReminder = createServerFn({ method: 'POST' })
+  .inputValidator((data: unknown) => createReminderSchema.parse(data))
+  .handler(async ({ data }) => {
     const request = getRequest()
-    const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
+    const sessionData = await auth.api.getSession({ headers: request.headers })
+    if (!sessionData?.user.id) throw new Error('Unauthorized')
     const userId = sessionData.user.id
 
     // Prefer timezone from client (browser-detected); fall back to profile timezone
     let timezone = data.timezone
-    if ( !timezone ) {
-      const userRecord = await db.query.user.findFirst( {
-        where: eq( user.id, userId ),
+    if (!timezone) {
+      const userRecord = await db.query.user.findFirst({
+        where: eq(user.id, userId),
         columns: { timezone: true },
-      } )
+      })
       timezone = userRecord?.timezone ?? 'UTC'
     }
 
     // Pre-compute UTC send time from local date + time + timezone
-    const toBeSentAt = toUtcDate( data.date, data.time, timezone )
+    const toBeSentAt = toUtcDate(data.date, data.time, timezone)
 
     const { timezone: _tz, ...rest } = data
     const [created] = await db
-      .insert( reminder )
-      .values( { ...rest, userId, timezone, toBeSentAt } )
+      .insert(reminder)
+      .values({ ...rest, userId, timezone, toBeSentAt })
       .returning()
     return created
-  } )
+  })
 
 // ── Toggle reminder completed ────────────────────────────────────────
-export const toggleReminder = createServerFn( { method: 'POST' } )
-  .inputValidator( ( data: unknown ) =>
-    z.object( { id: z.string(), isCompleted: z.boolean() } ).parse( data ),
+export const toggleReminder = createServerFn({ method: 'POST' })
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string(), isCompleted: z.boolean() }).parse(data),
   )
-  .handler( async ( { data } ) => {
+  .handler(async ({ data }) => {
     const request = getRequest()
-    const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
+    const sessionData = await auth.api.getSession({ headers: request.headers })
+    if (!sessionData?.user.id) throw new Error('Unauthorized')
     const userId = sessionData.user.id
 
     const [updated] = await db
-      .update( reminder )
-      .set( { isCompleted: data.isCompleted } )
-      .where( and( eq( reminder.id, data.id ), eq( reminder.userId, userId ) ) )
+      .update(reminder)
+      .set({ isCompleted: data.isCompleted })
+      .where(and(eq(reminder.id, data.id), eq(reminder.userId, userId)))
       .returning()
 
-    if ( !updated ) throw new Error( 'Reminder not found' )
+    if (!updated) throw new Error('Reminder not found')
     return updated
-  } )
+  })
 
 // ── Delete reminder ──────────────────────────────────────────────────
-export const deleteReminder = createServerFn( { method: 'POST' } )
-  .inputValidator( ( data: unknown ) => z.object( { id: z.string() } ).parse( data ) )
-  .handler( async ( { data } ) => {
+export const deleteReminder = createServerFn({ method: 'POST' })
+  .inputValidator((data: unknown) => z.object({ id: z.string() }).parse(data))
+  .handler(async ({ data }) => {
     const request = getRequest()
-    const sessionData = await auth.api.getSession( { headers: request.headers } )
-    if ( !sessionData?.user.id ) throw new Error( 'Unauthorized' )
+    const sessionData = await auth.api.getSession({ headers: request.headers })
+    if (!sessionData?.user.id) throw new Error('Unauthorized')
     const userId = sessionData.user.id
 
     await db
-      .delete( reminder )
-      .where( and( eq( reminder.id, data.id ), eq( reminder.userId, userId ) ) )
+      .delete(reminder)
+      .where(and(eq(reminder.id, data.id), eq(reminder.userId, userId)))
     return { success: true }
-  } )
+  })

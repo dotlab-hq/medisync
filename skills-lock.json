@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "chat-sdk": {
+      "source": "vercel/chat",
+      "sourceType": "github",
+      "computedHash": "2716215a0a0fee3b3df5f601218c3af16a80b7c8853aed6ffed63da3203e0faf"
+    },
     "drizzle-orm": {
       "source": "bobmatnyc/claude-mpm-skills",
       "sourceType": "github",

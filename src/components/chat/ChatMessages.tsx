@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import MessageBubble from './MessageBubble'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Bot } from 'lucide-react'
 
 type Attachment = {
@@ -38,39 +39,43 @@ type UIMessage = {
 type ChatMessagesProps = {
   messages: UIMessage[]
   isLoading: boolean
-  onToolApproval?: ( response: { id: string; approved: boolean } ) => Promise<void>
-  onOpenAttachment?: ( attachment: Attachment ) => Promise<void>
+  onToolApproval?: (response: {
+    id: string
+    approved: boolean
+  }) => Promise<void>
+  onOpenAttachment?: (attachment: Attachment) => Promise<void>
 }
 
-export default function ChatMessages( {
+export default function ChatMessages({
   messages,
   isLoading,
   onToolApproval,
   onOpenAttachment,
-}: ChatMessagesProps ) {
-  const bottomRef = useRef<HTMLDivElement>( null )
+}: ChatMessagesProps) {
+  const bottomRef = useRef<HTMLDivElement>(null)
 
-  useEffect( () => {
-    bottomRef.current?.scrollIntoView( { behavior: 'smooth' } )
-  }, [messages, isLoading] )
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isLoading])
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <ScrollArea className="flex-1">
       {messages.length === 0 && !isLoading && (
-        <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+        <div className="flex h-full min-h-[40vh] flex-col items-center justify-center gap-3 text-muted-foreground">
           <Bot className="h-12 w-12 opacity-30" />
           <p className="text-sm">Start a conversation with MediSync AI</p>
         </div>
       )}
 
-      {messages.map( ( msg, index ) => {
+      {messages.map((msg, index) => {
         // Only hide actions for the last assistant message if still streaming
         const isLastAssistantMsg =
           msg.role === 'assistant' && index === messages.length - 1 && isLoading
 
         const attachments =
           'attachments' in msg
-            ? ( msg as UIMessage & { attachments?: Attachment[] | null } ).attachments ?? undefined
+            ? ((msg as UIMessage & { attachments?: Attachment[] | null })
+                .attachments ?? undefined)
             : undefined
 
         return (
@@ -89,7 +94,7 @@ export default function ChatMessages( {
             onOpenAttachment={onOpenAttachment}
           />
         )
-      } )}
+      })}
 
       {isLoading && (
         <div className="flex gap-3 px-4 py-3">
@@ -104,6 +109,6 @@ export default function ChatMessages( {
       )}
 
       <div ref={bottomRef} />
-    </div>
+    </ScrollArea>
   )
 }

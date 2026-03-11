@@ -136,3 +136,9 @@
 **Problem:** The save-messages effect filtered with `m.content.trim().length > 0`, which dropped assistant messages that were purely tool-call results with no text content. Tool call data in `parts` was lost.
 
 **Fix:** Extended the filter to also keep messages where `parts` contain `tool-call` or `tool-result` type entries, even if text content is empty.
+
+### Dashboard route match warnings from guard failures
+
+**Problem:** The client showed repeated warnings like `Error in route match: /_dashboard/` when non-`Error` values or failed server guard calls surfaced during dashboard route matching.
+
+**Fix:** Hardened `/_dashboard` route `beforeLoad` with safe fallbacks for `getSession()` / `getOnboardingStatus()` and made `DashboardErrorBoundary` accept `unknown` with defensive message extraction. This prevents match-tree crashes and shows a stable fallback message.

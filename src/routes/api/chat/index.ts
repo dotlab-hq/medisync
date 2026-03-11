@@ -9,6 +9,17 @@ import {
   createGetFileUrlTool,
   createReadFileContentTool,
 } from '@/server/ai-tools'
+import {
+  createWikipediaQueryTool,
+  createStackExchangeSearchTool,
+  createCalculatorTool,
+} from '@/server/ai-web-tools'
+import {
+  createTavilySearchTool,
+  createTavilyMapTool,
+  createTavilyCrawlTool,
+  createTavilyExtractTool,
+} from '@/server/ai-tavily-tools'
 import { createGetCurrentUserInfoTool } from '@/server/ai-user-tools'
 import {
   createListRemindersTool,
@@ -25,7 +36,7 @@ import { getUserLocationDef } from '@/components/chat/client-tools'
 import { classifyPromptInjectionAttempt } from '@/server/chat-safeguard'
 
 const SYSTEM_PROMPT = `You are MediSync AI, a helpful and empathetic health assistant.
-Today is ${new Date().toLocaleDateString( 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' } )}.
+Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
 
 You have access to the following tool categories:
 
@@ -57,6 +68,17 @@ You have access to the following tool categories:
 ## Profile & Account
 - get_current_user_info — fetch profile, medical info, and storage quota/usage
 
+## Web & Utility
+- wikipedia_query      — search and summarise Wikipedia pages
+- stackexchange_search — search StackOverflow/StackExchange answers
+- calculator           — evaluate arithmetic expressions
+
+## Tavily
+- tavily_search  — Tavily AI search for fresh web results
+- tavily_map     — map website structure through intelligent traversal
+- tavily_crawl   — crawl website paths in parallel with discovery
+- tavily_extract — extract raw content from one or more URLs
+
 ## Workflow Guidelines
 • When creating reminders/appointments, ask for any missing required fields before calling the tool.
 • If the user doesn't specify a timezone, it will default to their profile timezone.
@@ -85,19 +107,19 @@ If SAFEGUARD_CLASSIFICATION.violation = 1:
 If SAFEGUARD_CLASSIFICATION.violation = 0:
 - Continue normally with the regular assistant behavior.`
 
-export const Route = createFileRoute( '/api/chat/' )( {
+export const Route = createFileRoute('/api/chat/')({
   server: {
     handlers: {
-      POST: async ( { request } ) => {
+      POST: async ({ request }) => {
         // Auth check
-        const session = await auth.api.getSession( {
+        const session = await auth.api.getSession({
           headers: request.headers,
-        } )
-        if ( !session || !session.user.id ) {
-          return new Response( JSON.stringify( { error: 'Unauthorized' } ), {
+        })
+        if (!session || !session.user.id) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
             status: 401,
             headers: { 'Content-Type': 'application/json' },
-          } )
+          })
         }
 
         const userId = session.user.id
@@ -106,73 +128,100 @@ export const Route = createFileRoute( '/api/chat/' )( {
           const { messages } = await request.json()
           const latestUserMessage = [...messages]
             .reverse()
-            .find( ( m: any ) => m?.role === 'user' && typeof m?.content === 'string' )
-          const safeguard = classifyPromptInjectionAttempt( latestUserMessage?.content ?? '' )
+            .find(
+              (m: any) => m?.role === 'user' && typeof m?.content === 'string',
+            )
+          const safeguard = classifyPromptInjectionAttempt(
+            latestUserMessage?.content ?? '',
+          )
 
           // Document workspace tools
-          const listFolders = createListFoldersTool( userId )
-          const listFilesInFolder = createListFilesInFolderTool( userId )
-          const searchFiles = createSearchFilesTool( userId )
-          const getFileUrl = createGetFileUrlTool( userId )
-          const readFileContent = createReadFileContentTool( userId )
+          const listFolders = createListFoldersTool(userId)
+          const listFilesInFolder = createListFilesInFolderTool(userId)
+          const searchFiles = createSearchFilesTool(userId)
+          const getFileUrl = createGetFileUrlTool(userId)
+          const readFileContent = createReadFileContentTool(userId)
 
           // Reminder CRUD tools
-          const listReminders = createListRemindersTool( userId )
-          const createReminder = createCreateReminderTool( userId )
-          const updateReminder = createUpdateReminderTool( userId )
-          const deleteReminder = createDeleteReminderTool( userId )
+          const listReminders = createListRemindersTool(userId)
+          const createReminder = createCreateReminderTool(userId)
+          const updateReminder = createUpdateReminderTool(userId)
+          const deleteReminder = createDeleteReminderTool(userId)
 
           // Appointment CRUD tools
-          const listAppointments = createListAppointmentsTool( userId )
-          const createAppointment = createCreateAppointmentTool( userId )
-          const updateAppointment = createUpdateAppointmentTool( userId )
-          const deleteAppointment = createDeleteAppointmentTool( userId )
+          const listAppointments = createListAppointmentsTool(userId)
+          const createAppointment = createCreateAppointmentTool(userId)
+          const updateAppointment = createUpdateAppointmentTool(userId)
+          const deleteAppointment = createDeleteAppointmentTool(userId)
 
           // Emergency
-          const sendSosEmergency = createSendSosEmergencyTool( userId )
-          const getCurrentUserInfo = createGetCurrentUserInfoTool( userId )
+          const sendSosEmergency = createSendSosEmergencyTool(userId)
+          const getCurrentUserInfo = createGetCurrentUserInfoTool(userId)
+          const wikipediaQuery = createWikipediaQueryTool()
+          const stackExchangeSearch = createStackExchangeSearchTool()
+          const calculator = createCalculatorTool()
+          const tavilySearch = createTavilySearchTool()
+          const tavilyMap = createTavilyMapTool()
+          const tavilyCrawl = createTavilyCrawlTool()
+          const tavilyExtract = createTavilyExtractTool()
 
           const serverTools = [
             // Document workspace
-            listFolders, listFilesInFolder, searchFiles, getFileUrl, readFileContent,
+            listFolders,
+            listFilesInFolder,
+            searchFiles,
+            getFileUrl,
+            readFileContent,
             // Profile
             getCurrentUserInfo,
+            // Web & utility
+            wikipediaQuery,
+            stackExchangeSearch,
+            calculator,
+            // Tavily
+            tavilySearch,
+            tavilyMap,
+            tavilyCrawl,
+            tavilyExtract,
             // Reminders
-            listReminders, createReminder, updateReminder, deleteReminder,
+            listReminders,
+            createReminder,
+            updateReminder,
+            deleteReminder,
             // Appointments
-            listAppointments, createAppointment, updateAppointment, deleteAppointment,
+            listAppointments,
+            createAppointment,
+            updateAppointment,
+            deleteAppointment,
             // Emergency
             sendSosEmergency,
           ]
 
-          const stream = chat( {
-            adapter: groqChat( 'openai/gpt-oss-120b' ),
-            modelOptions: {
-              parallel_tool_calls: true,
-              reasoning: {
-                effort: 'medium',
-                summary: "auto"
-              },
-            },
-            systemPrompts: [SYSTEM_PROMPT, SAFEGUARD_PROMPT,`SAFEGUARD_CLASSIFICATION=${JSON.stringify( safeguard )}`,],
-            messages: [
-              
-              ...messages,
-            ],
-            tools: safeguard.violation ? [getUserLocationDef] : [...serverTools, getUserLocationDef],
-            agentLoopStrategy: maxIterations( 30 ),
-          } )
+          const stream = chat({
+            adapter: groqChat('openai/gpt-oss-120b'),
 
-          return toServerSentEventsResponse( stream )
-        } catch ( error ) {
+            systemPrompts: [
+              SYSTEM_PROMPT,
+              SAFEGUARD_PROMPT,
+              `SAFEGUARD_CLASSIFICATION=${JSON.stringify(safeguard)}`,
+            ],
+            messages: [...messages],
+            tools: safeguard.violation
+              ? [getUserLocationDef]
+              : [...serverTools, getUserLocationDef],
+            agentLoopStrategy: maxIterations(30),
+          })
+
+          return toServerSentEventsResponse(stream)
+        } catch (error) {
           const message =
             error instanceof Error ? error.message : 'An error occurred'
-          return new Response( JSON.stringify( { error: message } ), {
+          return new Response(JSON.stringify({ error: message }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
-          } )
+          })
         }
       },
     },
   },
-} )
+})

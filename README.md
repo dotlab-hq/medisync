@@ -5,6 +5,7 @@ MediSync is a full-stack health management app . It helps users manage personal 
 ## Features
 
 ### Authentication & Account
+
 - Email/password authentication with Better Auth
 - Email verification, forgot password, and reset password flows
 - Protected dashboard and onboarding flow
@@ -12,34 +13,41 @@ MediSync is a full-stack health management app . It helps users manage personal 
 - Phone number OTP verification and phone update flow
 
 ### Onboarding
+
 - Guided first-time setup flow
 - Basic profile capture
 - Medical information capture
 - Emergency contact setup
 
 ### Dashboard
+
 - Health overview home with quick stats
 - Medical profile snapshot (blood group, allergies, chronic conditions)
 - Quick links to documents, reminders, appointments, and QR
 
 ### Health Metrics
+
 - Track and manage health metrics
 - Create/list/delete metric entries
 
 ### Medical Records
+
 - Create, update, list, and delete medical records
 
 ### Reminders
+
 - Create medication/reminder schedules
 - Enable/disable reminders
 - Delete reminders
 - Notification delivery via email/SMS (configurable)
 
 ### Appointments
+
 - Create, update, list, and delete appointments
 - Appointment notification support via cron endpoints
 
 ### Documents
+
 - Folder management (create/update/delete)
 - Document upload flow with presigned URLs
 - List and organize user documents
@@ -47,10 +55,12 @@ MediSync is a full-stack health management app . It helps users manage personal 
 - Storage usage summary
 
 ### Emergency Access & QR
+
 - User-specific emergency QR code generation/regeneration
 - Public emergency profile route via token
 
 ### AI Chat Assistant
+
 - Conversation-based AI chat
 - Auto-create conversation on first message
 - Redirect to generated conversation route
@@ -60,17 +70,20 @@ MediSync is a full-stack health management app . It helps users manage personal 
 - Like/dislike feedback persisted per assistant message
 
 ### Notifications
+
 - User notification settings (email/SMS)
 - Cron routes for reminder and appointment notification processing
 - Notification logging and type handling on server
 
 ### Localization & UX
+
 - Multi-language support via Paraglide i18n
 - Theme switching
 - Language switcher
 - Responsive dashboard UI with shadcn/ui + Tailwind CSS
 
 ## Public Pages
+
 - Landing/home
 - About
 - Health camps
@@ -80,6 +93,7 @@ MediSync is a full-stack health management app . It helps users manage personal 
 - Terms
 
 ## Tech Stack
+
 - TanStack Start + TanStack Router
 - React 19 + TypeScript
 - TanStack Query
@@ -90,9 +104,11 @@ MediSync is a full-stack health management app . It helps users manage personal 
 - Resend (email), RelayX (SMS), Groq (AI), AWS S3-compatible storage
 
 ## Environment Variables
+
 Copy `.env.example` to `.env` and set required values.
 
 Core keys used by the app include:
+
 - `DATABASE_URL`
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
@@ -142,6 +158,7 @@ pnpm test
 ```
 
 ## Project Structure (high level)
+
 - `src/routes` - File-based app and API routes
 - `src/server` - Server functions (auth, chat, reminders, appointments, etc.)
 - `src/components` - UI and feature components

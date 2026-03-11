@@ -35,9 +35,9 @@ import {
 import { Plus, Activity, Trash2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
-export const Route = createFileRoute( '/_dashboard/dashboard/health' )( {
+export const Route = createFileRoute('/_dashboard/dashboard/health')({
   component: HealthMetricsPage,
-} )
+})
 
 const METRIC_TYPES = [
   { value: 'blood_pressure', label: 'Blood Pressure', unit: 'mmHg' },
@@ -50,42 +50,42 @@ const METRIC_TYPES = [
 
 function HealthMetricsPage() {
   const queryClient = useQueryClient()
-  const [open, setOpen] = useState( false )
+  const [open, setOpen] = useState(false)
 
-  const { data: metrics = [], isLoading } = useQuery( {
+  const { data: metrics = [], isLoading } = useQuery({
     queryKey: ['healthMetrics'],
     queryFn: () => listHealthMetrics(),
     enabled: !import.meta.env.SSR,
     retry: false,
-  } )
+  })
 
-  const createMut = useMutation( {
+  const createMut = useMutation({
     mutationFn: createHealthMetric,
     onSuccess: () => {
-      queryClient.invalidateQueries( { queryKey: ['healthMetrics'] } )
-      setOpen( false )
+      queryClient.invalidateQueries({ queryKey: ['healthMetrics'] })
+      setOpen(false)
     },
-  } )
+  })
 
-  const deleteMut = useMutation( {
+  const deleteMut = useMutation({
     mutationFn: deleteHealthMetric,
     onSuccess: () =>
-      queryClient.invalidateQueries( { queryKey: ['healthMetrics'] } ),
-  } )
+      queryClient.invalidateQueries({ queryKey: ['healthMetrics'] }),
+  })
 
-  const handleCreate = ( e: React.FormEvent<HTMLFormElement> ) => {
+  const handleCreate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const fd = new FormData( e.currentTarget )
-    const metricType = fd.get( 'metricType' ) as string
-    const mt = METRIC_TYPES.find( ( m ) => m.value === metricType )
-    createMut.mutate( {
+    const fd = new FormData(e.currentTarget)
+    const metricType = fd.get('metricType') as string
+    const mt = METRIC_TYPES.find((m) => m.value === metricType)
+    createMut.mutate({
       data: {
         metricType,
-        value: fd.get( 'value' ) as string,
-        unit: mt?.unit ?? ( fd.get( 'unit' ) as string ) ?? undefined,
-        notes: ( fd.get( 'notes' ) as string ) || undefined,
+        value: fd.get('value') as string,
+        unit: mt?.unit ?? (fd.get('unit') as string) ?? undefined,
+        notes: (fd.get('notes') as string) || undefined,
       },
-    } )
+    })
   }
 
   return (
@@ -115,11 +115,11 @@ function HealthMetricsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {METRIC_TYPES.map( ( mt ) => (
+                    {METRIC_TYPES.map((mt) => (
                       <SelectItem key={mt.value} value={mt.value}>
                         {mt.label}
                       </SelectItem>
-                    ) )}
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -172,17 +172,17 @@ function HealthMetricsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {metrics.map( ( m ) => (
+                {metrics.map((m) => (
                   <TableRow key={m.id}>
                     <TableCell className="font-medium">
-                      {METRIC_TYPES.find( ( t ) => t.value === m.metricType )
+                      {METRIC_TYPES.find((t) => t.value === m.metricType)
                         ?.label ?? m.metricType}
                     </TableCell>
                     <TableCell>
                       {m.value} {m.unit ?? ''}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date( m.measuredAt ).toLocaleDateString()}
+                      {new Date(m.measuredAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {m.notes ?? '—'}
@@ -191,13 +191,13 @@ function HealthMetricsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => deleteMut.mutate( { data: { id: m.id } } )}
+                        onClick={() => deleteMut.mutate({ data: { id: m.id } })}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>
                   </TableRow>
-                ) )}
+                ))}
               </TableBody>
             </Table>
           </CardContent>

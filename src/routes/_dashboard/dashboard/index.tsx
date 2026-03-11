@@ -39,29 +39,29 @@ import { BLOOD_GROUP_LABELS } from '@/types'
 import type { BloodGroup } from '@/types'
 import { useState } from 'react'
 
-export const Route = createFileRoute( '/_dashboard/dashboard/' )( {
+export const Route = createFileRoute('/_dashboard/dashboard/')({
   component: DashboardHomePage,
-} )
+})
 
 const EMPTY_VALUES = ['na', 'n/a', 'none', 'nil', '']
 
-function isEffectivelyEmpty( val: string | null | undefined ) {
-  return !val || EMPTY_VALUES.includes( val.trim().toLowerCase() )
+function isEffectivelyEmpty(val: string | null | undefined) {
+  return !val || EMPTY_VALUES.includes(val.trim().toLowerCase())
 }
 
-function MedicalField( {
+function MedicalField({
   label,
   value,
 }: {
   label: string
   value: string | null | undefined
-} ) {
-  const [open, setOpen] = useState( false )
-  const empty = isEffectivelyEmpty( value )
+}) {
+  const [open, setOpen] = useState(false)
+  const empty = isEffectivelyEmpty(value)
   const trimmed = value?.trim() ?? ''
   const isLong = trimmed.length > 30
 
-  if ( empty ) {
+  if (empty) {
     return (
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
@@ -75,7 +75,7 @@ function MedicalField( {
       <p className="text-xs text-muted-foreground">{label}</p>
       <div className="mt-1 flex items-center gap-1">
         <p className="max-w-30 truncate text-sm font-medium">
-          {isLong ? trimmed.slice( 0, 28 ) + '…' : trimmed}
+          {isLong ? trimmed.slice(0, 28) + '…' : trimmed}
         </p>
         {isLong && (
           <TooltipProvider>
@@ -85,7 +85,7 @@ function MedicalField( {
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 shrink-0"
-                  onClick={() => setOpen( true )}
+                  onClick={() => setOpen(true)}
                 >
                   <MoreHorizontal className="h-3.5 w-3.5" />
                 </Button>
@@ -123,44 +123,44 @@ function DashboardSkeleton() {
       </div>
       <Skeleton className="h-40 w-full rounded-xl" />
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {Array.from( { length: 4 } ).map( ( _, i ) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-28 w-full rounded-xl" />
-        ) )}
+        ))}
       </div>
     </div>
   )
 }
 
 function DashboardHomePage() {
-  const { data: profile, isLoading } = useQuery( {
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['userProfile'],
     queryFn: () => getUserProfile(),
     enabled: !import.meta.env.SSR,
     retry: false,
-  } )
+  })
 
-  const { data: documents } = useQuery( {
+  const { data: documents } = useQuery({
     queryKey: ['documents'],
     queryFn: () => listAllDocuments(),
     enabled: !import.meta.env.SSR,
     retry: false,
-  } )
+  })
 
-  const { data: reminders } = useQuery( {
+  const { data: reminders } = useQuery({
     queryKey: ['reminders'],
     queryFn: () => listReminders(),
     enabled: !import.meta.env.SSR,
     retry: false,
-  } )
+  })
 
-  const { data: appointments } = useQuery( {
+  const { data: appointments } = useQuery({
     queryKey: ['appointments'],
     queryFn: () => listAppointments(),
     enabled: !import.meta.env.SSR,
     retry: false,
-  } )
+  })
 
-  if ( isLoading ) return <DashboardSkeleton />
+  if (isLoading) return <DashboardSkeleton />
 
   const quickLinks = [
     {
@@ -214,8 +214,8 @@ function DashboardHomePage() {
               <p className="text-xs text-muted-foreground">Blood Group</p>
               <Badge variant="secondary" className="mt-1">
                 {profile?.bloodGroup
-                  ? ( BLOOD_GROUP_LABELS[profile.bloodGroup as BloodGroup] ??
-                    profile.bloodGroup )
+                  ? (BLOOD_GROUP_LABELS[profile.bloodGroup as BloodGroup] ??
+                    profile.bloodGroup)
                   : 'Not set'}
               </Badge>
             </div>
@@ -240,7 +240,7 @@ function DashboardHomePage() {
       </Card>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {quickLinks.map( ( { label, icon: Icon, path, count }, idx ) => (
+        {quickLinks.map(({ label, icon: Icon, path, count }, idx) => (
           <Link key={path} to={path}>
             <Card
               className={`animate-fade-in-up stagger-${idx + 2} cursor-pointer border-border/50 transition-all hover:border-primary/50 hover:shadow-md`}
@@ -259,7 +259,7 @@ function DashboardHomePage() {
               </CardContent>
             </Card>
           </Link>
-        ) )}
+        ))}
       </div>
     </div>
   )

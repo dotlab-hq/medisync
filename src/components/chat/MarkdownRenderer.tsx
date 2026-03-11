@@ -14,18 +14,18 @@ type MarkdownRendererProps = {
   className?: string
 }
 
-function normalizeMarkdown( content: string ): string {
+function normalizeMarkdown(content: string): string {
   return content
-    .replace( /\r\n?/g, '\n' )
-    .replace( /\\\[([\s\S]*?)\\\]/g, ( _, math: string ) => `$$${math}$$` )
-    .replace( /\\\(([\s\S]*?)\\\)/g, ( _, math: string ) => `$${math}$` )
+    .replace(/\r\n?/g, '\n')
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, math: string) => `$$${math}$$`)
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_, math: string) => `$${math}$`)
 }
 
-export default function MarkdownRenderer( {
+export default function MarkdownRenderer({
   content,
   className,
-}: MarkdownRendererProps ) {
-  const normalized = normalizeMarkdown( content )
+}: MarkdownRendererProps) {
+  const normalized = normalizeMarkdown(content)
 
   return (
     <div
@@ -80,41 +80,29 @@ export default function MarkdownRenderer( {
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
         components={{
-          table: ( { children, ...props } ) => (
+          table: ({ children, ...props }) => (
             <div className="overflow-x-auto my-3 rounded-lg border border-border">
-              <table
-                {...props}
-                className="w-full border-collapse text-sm"
-              >
+              <table {...props} className="w-full border-collapse text-sm">
                 {children}
               </table>
             </div>
           ),
-          thead: ( { children, ...props } ) => (
-            <thead
-              {...props}
-              className="bg-muted/60"
-            >
+          thead: ({ children, ...props }) => (
+            <thead {...props} className="bg-muted/60">
               {children}
             </thead>
           ),
-          tbody: ( { children, ...props } ) => (
-            <tbody
-              {...props}
-              className="divide-y divide-border"
-            >
+          tbody: ({ children, ...props }) => (
+            <tbody {...props} className="divide-y divide-border">
               {children}
             </tbody>
           ),
-          tr: ( { children, ...props } ) => (
-            <tr
-              {...props}
-              className="border-b border-border last:border-b-0"
-            >
+          tr: ({ children, ...props }) => (
+            <tr {...props} className="border-b border-border last:border-b-0">
               {children}
             </tr>
           ),
-          th: ( { children, ...props } ) => (
+          th: ({ children, ...props }) => (
             <th
               {...props}
               className="border-r border-border px-3 py-2 text-left font-semibold align-top last:border-r-0"
@@ -122,7 +110,7 @@ export default function MarkdownRenderer( {
               {children}
             </th>
           ),
-          td: ( { children, ...props } ) => (
+          td: ({ children, ...props }) => (
             <td
               {...props}
               className="border-r border-border px-3 py-2 align-top whitespace-pre-wrap wrap-break-word last:border-r-0"

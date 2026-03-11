@@ -14,28 +14,28 @@ type ReasoningBlockProps = {
   className?: string
 }
 
-export default function ReasoningBlock( {
+export default function ReasoningBlock({
   reasoning,
   toolCalls,
   className,
-}: ReasoningBlockProps ) {
-  const [isExpanded, setIsExpanded] = useState( false )
+}: ReasoningBlockProps) {
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const hasToolCalls = toolCalls && toolCalls.length > 0
   const hasContent = reasoning || hasToolCalls
 
   // Generate a smart summary from the reasoning
-  const summary = useMemo( () => {
-    if ( !reasoning ) return ''
-    const sentences = reasoning.split( /[.!?]\s+/ )
+  const summary = useMemo(() => {
+    if (!reasoning) return ''
+    const sentences = reasoning.split(/[.!?]\s+/)
     const firstSentence = sentences[0]?.trim() || ''
-    if ( firstSentence.length > 80 ) {
-      return firstSentence.substring( 0, 77 ) + '...'
+    if (firstSentence.length > 80) {
+      return firstSentence.substring(0, 77) + '...'
     }
-    return firstSentence + ( sentences.length > 1 ? '...' : '' )
-  }, [reasoning] )
+    return firstSentence + (sentences.length > 1 ? '...' : '')
+  }, [reasoning])
 
-  if ( !hasContent ) return null
+  if (!hasContent) return null
 
   return (
     <div
@@ -45,7 +45,7 @@ export default function ReasoningBlock( {
       )}
     >
       <button
-        onClick={() => setIsExpanded( !isExpanded )}
+        onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
           'flex items-center gap-2 w-full px-3 py-2 text-left',
           'text-sm font-medium text-purple-700 dark:text-purple-300',
@@ -86,7 +86,7 @@ export default function ReasoningBlock( {
             {/* Tool calls section */}
             {hasToolCalls && (
               <div className="px-3 pt-2 pb-1 flex flex-col gap-1.5">
-                {toolCalls.map( ( tc, idx ) => (
+                {toolCalls.map((tc, idx) => (
                   <div
                     key={idx}
                     className="rounded-md border border-purple-300/40 dark:border-purple-700/40 bg-purple-100/40 dark:bg-purple-900/20 px-2.5 py-1.5 text-xs"
@@ -101,7 +101,7 @@ export default function ReasoningBlock( {
                       </div>
                     )}
                   </div>
-                ) )}
+                ))}
               </div>
             )}
 
@@ -118,8 +118,8 @@ export default function ReasoningBlock( {
   )
 }
 
-function ToolOutput( { output }: { output: Record<string, unknown> } ) {
-  if ( 'url' in output && 'fileName' in output ) {
+function ToolOutput({ output }: { output: Record<string, unknown> }) {
+  if ('url' in output && 'fileName' in output) {
     return (
       <a
         href={output.url as string}
@@ -131,18 +131,18 @@ function ToolOutput( { output }: { output: Record<string, unknown> } ) {
       </a>
     )
   }
-  if ( 'files' in output && Array.isArray( output.files ) ) {
+  if ('files' in output && Array.isArray(output.files)) {
     return (
       <ul className="list-inside list-disc">
-        {( output.files as Array<{ id: string; fileName: string }> ).map( ( f ) => (
+        {(output.files as Array<{ id: string; fileName: string }>).map((f) => (
           <li key={f.id}>{f.fileName}</li>
-        ) )}
+        ))}
       </ul>
     )
   }
   return (
     <pre className="whitespace-pre-wrap text-xs">
-      {JSON.stringify( output, null, 2 )}
+      {JSON.stringify(output, null, 2)}
     </pre>
   )
 }
