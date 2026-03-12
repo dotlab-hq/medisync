@@ -3,8 +3,8 @@
 MediSync is a full-stack health management app . It helps users manage personal health records, reminders, appointments, emergency profile sharing, document storage, and AI-assisted health chat in one dashboard.
 
 ## Demo Credentials 
-Email : `test@example.com`
-Password : `12345678'
+Email : `test@example.com` \n
+Password : `12345678`
 
 ## Features
 
