@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { z } from 'zod/v4'
-import { ChatSidebarToggle } from '@/components/chat/ChatSidebar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useChatStore } from '@/components/chat/chat-store'
 import {
@@ -57,11 +56,23 @@ function ChatPage() {
   const { chatId } = Route.useSearch()
   const [conversations, setConversations] = useState<ConversationItem[]>([])
   const [loading, setLoading] = useState(true)
-  const { activeConversationId, setActiveConversation } = useChatStore()
+  const {
+    activeConversationId,
+    setActiveConversation,
+    sidebarOpen,
+    setSidebarOpen,
+  } = useChatStore()
 
   useEffect(() => {
     setActiveConversation(chatId ?? null)
   }, [chatId, setActiveConversation])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
+  }, [setSidebarOpen])
 
   // Load conversations on mount — use functional update so any optimistic additions
   // made before the fetch resolves are preserved at the top of the list.
@@ -89,9 +100,12 @@ function ChatPage() {
   const handleSelect = useCallback(
     (id: string) => {
       setActiveConversation(id)
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        setSidebarOpen(false)
+      }
       navigate({ to: '/dashboard/chat', search: { chatId: id } })
     },
-    [setActiveConversation, navigate],
+    [setActiveConversation, navigate, setSidebarOpen],
   )
 
   const handleDelete = useCallback(
@@ -174,7 +188,7 @@ function ChatPage() {
   )
 
   return (
-    <div className="-mx-4 lg:-mx-8 -my-6 relative flex h-screen overflow-hidden">
+    <div className="relative flex h-full overflow-hidden">
       <Suspense
         fallback={
           <div className="w-64 space-y-2 border-r border-border/50 p-3">
@@ -184,6 +198,14 @@ function ChatPage() {
           </div>
         }
       >
+        {sidebarOpen ? (
+          <button
+            type="button"
+            aria-label="Close chat list"
+            className="absolute inset-0 z-10 bg-background/40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        ) : null}
         <ChatSidebar
           conversations={conversations}
           isLoading={loading}
@@ -197,9 +219,7 @@ function ChatPage() {
         />
       </Suspense>
 
-      <ChatSidebarToggle />
-
-      <div className="flex-1">
+      <div className="flex min-h-0 flex-1">
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center">

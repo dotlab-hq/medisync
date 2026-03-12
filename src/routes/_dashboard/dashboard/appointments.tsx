@@ -179,9 +179,7 @@ function AppointmentsPage() {
       ) : (
         <div className="space-y-3">
           {filtered.map((appt) => {
-            const cfg =
-              STATUS_CONFIG[appt.status as keyof typeof STATUS_CONFIG] ??
-              STATUS_CONFIG.upcoming
+            const cfg = STATUS_CONFIG[appt.status as keyof typeof STATUS_CONFIG]
             return (
               <div
                 key={appt.id}

@@ -167,7 +167,7 @@ export default function ChatInput({
 
   return (
     <div className="border-t border-border/50 bg-background p-3">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto w-full max-w-3xl">
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}

@@ -42,9 +42,7 @@ function requireEnv(name: string): string {
 
 const DATABASE_URL_RAW = requireEnv('DATABASE_URL')
 const PRIVATE_KEY = requireEnv('MEDISYNC_PRIVATE_KEY')
-const APP_URL = (
-  process.env.BETTER_AUTH_URL ?? 'http://localhost:3000'
-).replace(/\/$/, '')
+const APP_URL = process.env.APP_URL || requireEnv('BETTER_AUTH_URL')
 
 /**
  * pg_cron + pg_net setup MUST run over a direct (non-pooled) connection.

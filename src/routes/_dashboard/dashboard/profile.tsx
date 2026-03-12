@@ -5,6 +5,7 @@ import { getUserProfile, updateUser, upsertAddress } from '@/server/user'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { MedicalInfoForm } from '@/components/dashboard/MedicalInfoForm'
 import { EmergencyContactsManager } from '@/components/dashboard/EmergencyContactsManager'
 import { ChangePhoneDialog } from '@/components/dashboard/ChangePhoneDialog'
@@ -105,12 +106,15 @@ function ProfilePage() {
       />
 
       <Tabs defaultValue="personal">
-        <TabsList>
-          <TabsTrigger value="personal">Personal Info</TabsTrigger>
-          <TabsTrigger value="address">Address</TabsTrigger>
-          <TabsTrigger value="medical">Medical Info</TabsTrigger>
-          <TabsTrigger value="emergency">Emergency Contacts</TabsTrigger>
-        </TabsList>
+        <ScrollArea className="w-full whitespace-nowrap ">
+          <TabsList className="inline-flex w-max min-w-full overflow-y-hidden">
+            <TabsTrigger value="personal">Personal Info</TabsTrigger>
+            <TabsTrigger value="address">Address</TabsTrigger>
+            <TabsTrigger value="medical">Medical Info</TabsTrigger>
+            <TabsTrigger value="emergency">Emergency Contacts</TabsTrigger>
+          </TabsList>
+          <ScrollBar orientation="horizontal" className="hidden" />
+        </ScrollArea>
 
         <TabsContent value="personal">
           <PersonalInfoCard

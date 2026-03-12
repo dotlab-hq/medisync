@@ -125,8 +125,10 @@ export default function ChatSidebar({
   return (
     <div
       className={cn(
-        'flex flex-col border-r border-border/50 bg-card/50 transition-all duration-200 overflow-hidden',
-        sidebarOpen ? 'w-64' : 'w-0',
+        'absolute inset-y-0 left-0 z-20 flex w-72 flex-col overflow-hidden border-r border-border/50 bg-card/95 backdrop-blur transition-transform duration-200 md:relative md:inset-auto md:z-auto md:w-auto md:bg-card/50 md:backdrop-blur-none',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        sidebarOpen ? 'md:w-64' : 'md:w-0',
+        'md:translate-x-0',
       )}
     >
       {/* Header */}

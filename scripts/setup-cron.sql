@@ -29,7 +29,7 @@ WHERE
 SELECT cron.schedule(
     'medisync-notify-reminders',
     '* * * * *',
-    $$SELECT CASE WHEN EXISTS (SELECT 1 FROM medisync.reminder WHERE to_be_sent_at IS NOT NULL AND to_be_sent_at <= now() AND is_completed = false LIMIT 1)
+  $$SELECT CASE WHEN EXISTS (SELECT 1 FROM medisync.due_reminder_notifications LIMIT 1)
     THEN net.http_post(
       url => '{{APP_URL}}/api/cron/notify-reminders',
       headers => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
@@ -43,7 +43,7 @@ SELECT cron.schedule(
 SELECT cron.schedule(
     'medisync-notify-appointments',
     '* * * * *',
-    $$SELECT CASE WHEN EXISTS (SELECT 1 FROM medisync.appointment WHERE to_be_sent_at IS NOT NULL AND to_be_sent_at <= now() AND status = 'upcoming' LIMIT 1)
+  $$SELECT CASE WHEN EXISTS (SELECT 1 FROM medisync.due_appointment_notifications LIMIT 1)
     THEN net.http_post(
       url => '{{APP_URL}}/api/cron/notify-appointments',
       headers => '{"Content-Type":"application/json","x-medisync-key":"{{PRIVATE_KEY}}"}'::jsonb,
