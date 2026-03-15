@@ -16,7 +16,6 @@ interface StorageInfo {
 
 interface FolderSidebarProps {
   folders: FolderItem[]
-  totalDocCount: number
   docCountByFolder: Record<string, number>
   selectedFolderId: string | null
   onSelectFolder: (id: string | null) => void
@@ -27,7 +26,6 @@ interface FolderSidebarProps {
 
 export function FolderSidebar({
   folders,
-  totalDocCount,
   docCountByFolder,
   selectedFolderId,
   onSelectFolder,
@@ -41,18 +39,12 @@ export function FolderSidebar({
         <p className="text-xs font-semibold uppercase text-muted-foreground px-2 mb-2">
           Folders
         </p>
-        <button
-          onClick={() => onSelectFolder(null)}
-          className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-            selectedFolderId === null
-              ? 'bg-primary text-primary-foreground'
-              : 'hover:bg-muted'
-          }`}
-        >
-          <Folder className="h-4 w-4" />
-          All Files
-          <span className="ml-auto text-xs opacity-60">{totalDocCount}</span>
-        </button>
+
+        {folders.length === 0 && (
+          <p className="text-xs text-muted-foreground px-3 py-2">
+            No folders yet
+          </p>
+        )}
 
         {folders.map((folder) => {
           const count = docCountByFolder[folder.id] ?? 0
@@ -64,7 +56,9 @@ export function FolderSidebar({
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-muted'
               }`}
-              onClick={() => onSelectFolder(folder.id)}
+              onClick={() =>
+                onSelectFolder(selectedFolderId === folder.id ? null : folder.id)
+              }
             >
               <Folder className="h-4 w-4 shrink-0" />
               <span className="truncate flex-1">{folder.name}</span>
