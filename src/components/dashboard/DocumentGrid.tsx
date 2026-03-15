@@ -37,7 +37,7 @@ export function DocumentGrid({
 }: DocumentGridProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[...Array(3)].map((_, i) => (
           <div key={i} className="h-32 rounded-lg bg-muted animate-pulse" />
         ))}
@@ -62,7 +62,7 @@ export function DocumentGrid({
 
   return (
     <TooltipProvider>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {documents.map((doc) => (
           <Card key={doc.id} className="group border-border/50">
             <CardHeader className="pb-2">
@@ -83,7 +83,7 @@ export function DocumentGrid({
                     <Lock className="h-3.5 w-3.5 text-destructive" />
                   )}
                   <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/10 rounded"
+                    className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/10 rounded"
                     onClick={() => onDelete(doc.id)}
                     title="Delete"
                   >
