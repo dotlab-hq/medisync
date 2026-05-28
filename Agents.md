@@ -10,6 +10,8 @@
 - Locale switcher should use Select dropdown, not buttons. Hindi language support required.
 - All pages need loading skeletons and fadeInUp animations
 - Documents page needs multi-file XHR upload, tooltip for long filenames, storage at sidebar bottom
+- Chat completion must go through ai-edge.onrender.com with the provided API key fallback
+- Chat title regeneration should be best-effort and must not consume the stream twice
 
 ## Mistakes & Learnings
 
@@ -142,3 +144,9 @@
 **Problem:** The client showed repeated warnings like `Error in route match: /_dashboard/` when non-`Error` values or failed server guard calls surfaced during dashboard route matching.
 
 **Fix:** Hardened `/_dashboard` route `beforeLoad` with safe fallbacks for `getSession()` / `getOnboardingStatus()` and made `DashboardErrorBoundary` accept `unknown` with defensive message extraction. This prevents match-tree crashes and shows a stable fallback message.
+
+### Retitle stream consumed twice
+
+**Problem:** `retitleConversation` called `streamToText(stream)` twice on the same stream, which can exhaust the stream before the second read and leave the generated title empty.
+
+**Fix:** Read the stream once, store the trimmed result in a local variable, and reuse that value when returning the title.

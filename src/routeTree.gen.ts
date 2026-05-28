@@ -33,6 +33,7 @@ import { Route as ApiCronNotifyRemindersRouteImport } from './routes/api/cron/no
 import { Route as ApiCronNotifyAppointmentsRouteImport } from './routes/api/cron/notify-appointments'
 import { Route as ApiChatTtsRouteImport } from './routes/api/chat/tts'
 import { Route as ApiChatRetitleRouteImport } from './routes/api/chat/retitle'
+import { Route as ApiChatRawRouteImport } from './routes/api/chat/raw'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardDashboardSettingsRouteImport } from './routes/_dashboard/dashboard/settings'
 import { Route as DashboardDashboardRemindersRouteImport } from './routes/_dashboard/dashboard/reminders'
@@ -164,6 +165,11 @@ const ApiChatRetitleRoute = ApiChatRetitleRouteImport.update({
   path: '/api/chat/retitle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRawRoute = ApiChatRawRouteImport.update({
+  id: '/api/chat/raw',
+  path: '/api/chat/raw',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/reminders': typeof DashboardDashboardRemindersRoute
   '/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/raw': typeof ApiChatRawRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
   '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
@@ -290,6 +297,7 @@ export interface FileRoutesByTo {
   '/dashboard/reminders': typeof DashboardDashboardRemindersRoute
   '/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/raw': typeof ApiChatRawRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
   '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
@@ -328,6 +336,7 @@ export interface FileRoutesById {
   '/_dashboard/dashboard/reminders': typeof DashboardDashboardRemindersRoute
   '/_dashboard/dashboard/settings': typeof DashboardDashboardSettingsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/raw': typeof ApiChatRawRoute
   '/api/chat/retitle': typeof ApiChatRetitleRoute
   '/api/chat/tts': typeof ApiChatTtsRoute
   '/api/cron/notify-appointments': typeof ApiCronNotifyAppointmentsRoute
@@ -365,6 +374,7 @@ export interface FileRouteTypes {
     | '/dashboard/reminders'
     | '/dashboard/settings'
     | '/api/auth/$'
+    | '/api/chat/raw'
     | '/api/chat/retitle'
     | '/api/chat/tts'
     | '/api/cron/notify-appointments'
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/dashboard/reminders'
     | '/dashboard/settings'
     | '/api/auth/$'
+    | '/api/chat/raw'
     | '/api/chat/retitle'
     | '/api/chat/tts'
     | '/api/cron/notify-appointments'
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/_dashboard/dashboard/reminders'
     | '/_dashboard/dashboard/settings'
     | '/api/auth/$'
+    | '/api/chat/raw'
     | '/api/chat/retitle'
     | '/api/chat/tts'
     | '/api/cron/notify-appointments'
@@ -453,6 +465,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   EmergencyTokenRoute: typeof EmergencyTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiChatRawRoute: typeof ApiChatRawRoute
   ApiChatRetitleRoute: typeof ApiChatRetitleRoute
   ApiChatTtsRoute: typeof ApiChatTtsRoute
   ApiCronNotifyAppointmentsRoute: typeof ApiCronNotifyAppointmentsRoute
@@ -630,6 +643,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRetitleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat/raw': {
+      id: '/api/chat/raw'
+      path: '/api/chat/raw'
+      fullPath: '/api/chat/raw'
+      preLoaderRoute: typeof ApiChatRawRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -792,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   EmergencyTokenRoute: EmergencyTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiChatRawRoute: ApiChatRawRoute,
   ApiChatRetitleRoute: ApiChatRetitleRoute,
   ApiChatTtsRoute: ApiChatTtsRoute,
   ApiCronNotifyAppointmentsRoute: ApiCronNotifyAppointmentsRoute,

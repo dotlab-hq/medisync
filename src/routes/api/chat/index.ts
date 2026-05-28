@@ -1,7 +1,7 @@
 import { chat, toServerSentEventsResponse, maxIterations } from '@tanstack/ai'
 import { createFileRoute } from '@tanstack/react-router'
 import { auth } from '@/lib/auth'
-import { groqChat } from '@/lib/groq'
+import { anthropicChat } from '@/lib/anthropic'
 import {
   createListFoldersTool,
   createListFilesInFolderTool,
@@ -36,7 +36,7 @@ import { getUserLocationDef } from '@/components/chat/client-tools'
 import { classifyPromptInjectionAttempt } from '@/server/chat-safeguard'
 
 const SYSTEM_PROMPT = `You are MediSync AI, a helpful and empathetic health assistant.
-Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+Today is ${new Date().toLocaleDateString( 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' } )}.
 
 You have access to the following tool categories:
 
@@ -107,19 +107,19 @@ If SAFEGUARD_CLASSIFICATION.violation = 1:
 If SAFEGUARD_CLASSIFICATION.violation = 0:
 - Continue normally with the regular assistant behavior.`
 
-export const Route = createFileRoute('/api/chat/')({
+export const Route = createFileRoute( '/api/chat/' )( {
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ( { request } ) => {
         // Auth check
-        const session = await auth.api.getSession({
+        const session = await auth.api.getSession( {
           headers: request.headers,
-        })
-        if (!session || !session.user.id) {
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        } )
+        if ( !session || !session.user.id ) {
+          return new Response( JSON.stringify( { error: 'Unauthorized' } ), {
             status: 401,
             headers: { 'Content-Type': 'application/json' },
-          })
+          } )
         }
 
         const userId = session.user.id
@@ -129,34 +129,34 @@ export const Route = createFileRoute('/api/chat/')({
           const latestUserMessage = [...messages]
             .reverse()
             .find(
-              (m: any) => m?.role === 'user' && typeof m?.content === 'string',
+              ( m: any ) => m?.role === 'user' && typeof m?.content === 'string',
             )
           const safeguard = classifyPromptInjectionAttempt(
             latestUserMessage?.content ?? '',
           )
 
           // Document workspace tools
-          const listFolders = createListFoldersTool(userId)
-          const listFilesInFolder = createListFilesInFolderTool(userId)
-          const searchFiles = createSearchFilesTool(userId)
-          const getFileUrl = createGetFileUrlTool(userId)
-          const readFileContent = createReadFileContentTool(userId)
+          const listFolders = createListFoldersTool( userId )
+          const listFilesInFolder = createListFilesInFolderTool( userId )
+          const searchFiles = createSearchFilesTool( userId )
+          const getFileUrl = createGetFileUrlTool( userId )
+          const readFileContent = createReadFileContentTool( userId )
 
           // Reminder CRUD tools
-          const listReminders = createListRemindersTool(userId)
-          const createReminder = createCreateReminderTool(userId)
-          const updateReminder = createUpdateReminderTool(userId)
-          const deleteReminder = createDeleteReminderTool(userId)
+          const listReminders = createListRemindersTool( userId )
+          const createReminder = createCreateReminderTool( userId )
+          const updateReminder = createUpdateReminderTool( userId )
+          const deleteReminder = createDeleteReminderTool( userId )
 
           // Appointment CRUD tools
-          const listAppointments = createListAppointmentsTool(userId)
-          const createAppointment = createCreateAppointmentTool(userId)
-          const updateAppointment = createUpdateAppointmentTool(userId)
-          const deleteAppointment = createDeleteAppointmentTool(userId)
+          const listAppointments = createListAppointmentsTool( userId )
+          const createAppointment = createCreateAppointmentTool( userId )
+          const updateAppointment = createUpdateAppointmentTool( userId )
+          const deleteAppointment = createDeleteAppointmentTool( userId )
 
           // Emergency
-          const sendSosEmergency = createSendSosEmergencyTool(userId)
-          const getCurrentUserInfo = createGetCurrentUserInfoTool(userId)
+          const sendSosEmergency = createSendSosEmergencyTool( userId )
+          const getCurrentUserInfo = createGetCurrentUserInfoTool( userId )
           const wikipediaQuery = createWikipediaQueryTool()
           const stackExchangeSearch = createStackExchangeSearchTool()
           const calculator = createCalculatorTool()
@@ -197,31 +197,31 @@ export const Route = createFileRoute('/api/chat/')({
             sendSosEmergency,
           ]
 
-          const stream = chat({
-            adapter: groqChat('openai/gpt-oss-120b'),
+          const stream = chat( {
+            adapter: anthropicChat( 'claude-sonnet-4-5' ),
             stream: true,
             systemPrompts: [
               SYSTEM_PROMPT,
               SAFEGUARD_PROMPT,
-              `SAFEGUARD_CLASSIFICATION=${JSON.stringify(safeguard)}`,
+              `SAFEGUARD_CLASSIFICATION=${JSON.stringify( safeguard )}`,
             ],
             messages: [...messages],
             tools: safeguard.violation
               ? [getUserLocationDef]
               : [...serverTools, getUserLocationDef],
-            agentLoopStrategy: maxIterations(30),
-          })
+            agentLoopStrategy: maxIterations( 30 ),
+          } )
 
-          return toServerSentEventsResponse(stream)
-        } catch (error) {
+          return toServerSentEventsResponse( stream )
+        } catch ( error ) {
           const message =
             error instanceof Error ? error.message : 'An error occurred'
-          return new Response(JSON.stringify({ error: message }), {
+          return new Response( JSON.stringify( { error: message } ), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
-          })
+          } )
         }
       },
     },
   },
-})
+} )

@@ -135,13 +135,10 @@ function ChatPage() {
   const handleTitleUpdated = useCallback((id: string, title: string) => {
     // Title-only update: keep original updatedAt and list position.
     setConversations((prev) => {
-      let changed = false
-      const next = prev.map((conv) => {
+      return prev.map((conv) => {
         if (conv.id !== id) return conv
-        changed = true
         return { ...conv, title }
       })
-      return changed ? next : prev
     })
   }, [])
 
@@ -175,6 +172,8 @@ function ChatPage() {
         const { title } = await retitleConversation({
           data: { messages: plainMessages },
         })
+
+        console.log('Regenerated title:', title)
 
         if (title && title !== 'New Chat') {
           await renameConversation({ data: { id, title } })

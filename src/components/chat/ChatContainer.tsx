@@ -5,7 +5,6 @@ import type { MultimodalContent } from '@tanstack/ai-client'
 import { clientTools } from '@tanstack/ai-client'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
-import TTSButton from './TTSButton'
 import { useChatStore } from './chat-store'
 import { getUserLocationTool } from './client-tools'
 import {
@@ -482,16 +481,6 @@ export default function ChatContainer({
     [],
   )
 
-  const lastAssistantMessage = messages
-    .filter((m) => m.role === 'assistant')
-    .at(-1)
-
-  const lastAssistantText =
-    lastAssistantMessage?.parts
-      .filter((p) => p.type === 'text')
-      .map((p) => p.content || '')
-      .join('') ?? ''
-
   return (
     <div className="flex h-full w-full min-w-0 flex-1 flex-col">
       <ChatMessages
@@ -502,17 +491,6 @@ export default function ChatContainer({
         onToolApproval={addToolApprovalResponse}
         onOpenAttachment={handleOpenAttachment}
       />
-
-      {/* {lastAssistantText &&
-        lastAssistantMessage?.id &&
-        !( isLoading || isConversationLoading ) && (
-          <div className="flex justify-end px-4 pb-1">
-            <TTSButton
-              messageId={lastAssistantMessage.id}
-              text={lastAssistantText}
-            />
-          </div>
-        )} */}
 
       <ChatInput
         onSend={handleSend}
