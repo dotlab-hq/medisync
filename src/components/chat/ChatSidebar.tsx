@@ -124,6 +124,8 @@ export default function ChatSidebar({
 
   return (
     <div
+      aria-hidden={!sidebarOpen}
+      inert={sidebarOpen ? undefined : true}
       className={cn(
         'absolute inset-y-0 left-0 z-20 w-72 overflow-hidden border-r border-border/50 bg-card/95 backdrop-blur transition-[transform,width,opacity] duration-200 ease-out md:relative md:inset-auto md:z-auto md:bg-card/50 md:backdrop-blur-none',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full',
