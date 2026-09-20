@@ -31,11 +31,11 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - name: Install Vercel CLI
-        run: pnpm add -g vercel@latest
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Update env-manager with production variables
         run: |
@@ -65,30 +65,24 @@ jobs:
 
       - name: Set environment variables on Vercel
         run: |
-          echo -n "${{ secrets.DATABASE_URL }}" | vercel env add DATABASE_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.BETTER_AUTH_URL }}" | vercel env add BETTER_AUTH_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.BETTER_AUTH_SECRET }}" | vercel env add BETTER_AUTH_SECRET production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.RESEND_API_KEY }}" | vercel env add RESEND_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.EMAIL_FROM }}" | vercel env add EMAIL_FROM production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.APP_URL }}" | vercel env add APP_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.AWS_ACCESS_KEY_ID }}" | vercel env add AWS_ACCESS_KEY_ID production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" | vercel env add AWS_SECRET_ACCESS_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.AWS_REGION }}" | vercel env add AWS_REGION production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.AWS_S3_BUCKET }}" | vercel env add AWS_S3_BUCKET production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.AWS_S3_ENDPOINT }}" | vercel env add AWS_S3_ENDPOINT production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.MEDISYNC_PRIVATE_KEY }}" | vercel env add MEDISYNC_PRIVATE_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.RELAYX_API_KEY }}" | vercel env add RELAYX_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.GROQ_API_KEY }}" | vercel env add GROQ_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
-          echo -n "${{ secrets.TAVILY_API_KEY }}" | vercel env add TAVILY_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          echo -n "${{ secrets.DATABASE_URL }}" | pnpm exec vercel env add DATABASE_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.BETTER_AUTH_URL }}" | pnpm exec vercel env add BETTER_AUTH_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.BETTER_AUTH_SECRET }}" | pnpm exec vercel env add BETTER_AUTH_SECRET production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.RESEND_API_KEY }}" | pnpm exec vercel env add RESEND_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.EMAIL_FROM }}" | pnpm exec vercel env add EMAIL_FROM production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.APP_URL }}" | pnpm exec vercel env add APP_URL production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_ACCESS_KEY_ID }}" | pnpm exec vercel env add AWS_ACCESS_KEY_ID production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" | pnpm exec vercel env add AWS_SECRET_ACCESS_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_REGION }}" | pnpm exec vercel env add AWS_REGION production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_S3_BUCKET }}" | pnpm exec vercel env add AWS_S3_BUCKET production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.AWS_S3_ENDPOINT }}" | pnpm exec vercel env add AWS_S3_ENDPOINT production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.MEDISYNC_PRIVATE_KEY }}" | pnpm exec vercel env add MEDISYNC_PRIVATE_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.RELAYX_API_KEY }}" | pnpm exec vercel env add RELAYX_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.GROQ_API_KEY }}" | pnpm exec vercel env add GROQ_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
+          echo -n "${{ secrets.TAVILY_API_KEY }}" | pnpm exec vercel env add TAVILY_API_KEY production --token=${{ secrets.VERCEL_TOKEN }} --force
 
       - name: Build project with pnpm
         run: pnpm build
 
-      - name: Install Vercel CLI
-        run: pnpm add -g vercel@latest
-
       - name: Deploy to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
