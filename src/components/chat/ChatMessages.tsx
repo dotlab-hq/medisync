@@ -2,7 +2,8 @@ import { useRef, useEffect } from 'react'
 import MessageBubble from './MessageBubble'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Bot } from 'lucide-react'
+import { AlertCircle, Bot, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 type Attachment = {
   documentId?: string
@@ -39,6 +40,8 @@ type UIMessage = {
 type ChatMessagesProps = {
   messages: UIMessage[]
   isLoading: boolean
+  error?: Error
+  onRetry?: () => Promise<void>
   onToolApproval?: (response: {
     id: string
     approved: boolean
@@ -49,6 +52,8 @@ type ChatMessagesProps = {
 export default function ChatMessages({
   messages,
   isLoading,
+  error,
+  onRetry,
   onToolApproval,
   onOpenAttachment,
 }: ChatMessagesProps) {
@@ -95,6 +100,30 @@ export default function ChatMessages({
           />
         )
       })}
+
+      {error ? (
+        <div className="mx-auto my-4 flex max-w-2xl items-start gap-3 border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">MediSync AI could not respond</p>
+            <p className="mt-1 break-words text-xs text-muted-foreground">
+              {error.message || 'The AI request failed. Please try again.'}
+            </p>
+          </div>
+          {onRetry ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => void onRetry()}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Retry
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       {isLoading && (
         <div className="flex gap-3 px-4 py-3">

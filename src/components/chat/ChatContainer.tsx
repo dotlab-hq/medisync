@@ -131,6 +131,8 @@ export default function ChatContainer({
     isLoading,
     setMessages,
     stop,
+    error,
+    reload,
     addToolApprovalResponse,
   } = useChat({
     connection: fetchServerSentEvents('/api/chat'),
@@ -488,6 +490,8 @@ export default function ChatContainer({
           messages as unknown as Parameters<typeof ChatMessages>[0]['messages']
         }
         isLoading={isLoading || isConversationLoading}
+        error={error}
+        onRetry={reload}
         onToolApproval={addToolApprovalResponse}
         onOpenAttachment={handleOpenAttachment}
       />
