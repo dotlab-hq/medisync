@@ -1,4 +1,4 @@
-import { ArrowUp, Paperclip, Square } from 'lucide-react'
+import { ArrowUp, Files, FileUp, Paperclip, Square } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useMicDictateStore } from './stores/useMicDictate'
@@ -10,6 +10,16 @@ import { useChatTextarea } from './hooks/useChatTextarea'
 import { useChatTextareaStore } from './stores/useChatTextarea'
 import { useAttachmentUpload } from './input/useAttachmentUpload'
 import type { UploadedAttachment } from './input/attachment-types'
+import {
+  DocumentPickerDialog,
+  type SelectableDocument,
+} from './input/DocumentPickerDialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 type ChatInputProps = {
   onSend: (
@@ -28,6 +38,7 @@ export default function ChatInput({
   placeholder,
 }: ChatInputProps) {
   const [isDragOver, setIsDragOver] = useState(false)
+  const [documentPickerOpen, setDocumentPickerOpen] = useState(false)
   const { textareaRef, value, lineHeight, handleInput, clear } =
     useChatTextarea({
       lineHeight: 24,
@@ -48,6 +59,7 @@ export default function ChatInput({
     hasFiles,
     isUploading,
     addFilesAndUpload,
+    addExistingDocuments,
     removeFile,
     clearFiles,
     getUploadedAttachments,
@@ -107,6 +119,13 @@ export default function ChatInput({
   const handleFileSelect = useCallback(() => {
     fileInputRef.current?.click()
   }, [])
+
+  const handleExistingDocuments = useCallback(
+    (documents: SelectableDocument[]) => {
+      addExistingDocuments(documents)
+    },
+    [addExistingDocuments],
+  )
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,17 +239,33 @@ export default function ChatInput({
                 <div className="flex items-center justify-between w-full">
                   {/* Left: file attach */}
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleFileSelect}
-                      className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
-                        'text-muted-foreground hover:text-foreground hover:bg-muted',
-                      )}
-                      title="Attach files"
-                      disabled={disabled || isUploading}
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className={cn(
+                            'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
+                            'text-muted-foreground hover:bg-muted hover:text-foreground',
+                          )}
+                          title="Attach files"
+                          disabled={disabled || isUploading}
+                        >
+                          <Paperclip className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" side="top">
+                        <DropdownMenuItem onSelect={handleFileSelect}>
+                          <FileUp />
+                          Upload from device
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => setDocumentPickerOpen(true)}
+                        >
+                          <Files />
+                          Choose from Documents
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
                   {/* Right: mic + send */}
@@ -277,6 +312,11 @@ export default function ChatInput({
           professional.
         </p>
       </div>
+      <DocumentPickerDialog
+        open={documentPickerOpen}
+        onOpenChange={setDocumentPickerOpen}
+        onSelect={handleExistingDocuments}
+      />
     </div>
   )
 }

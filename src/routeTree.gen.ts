@@ -44,6 +44,7 @@ import { Route as DashboardDashboardDocumentsRouteImport } from './routes/_dashb
 import { Route as DashboardDashboardDeveloperRouteImport } from './routes/_dashboard/dashboard/developer'
 import { Route as DashboardDashboardAppointmentsRouteImport } from './routes/_dashboard/dashboard/appointments'
 import { Route as DashboardDashboardChatIndexRouteImport } from './routes/_dashboard/dashboard/chat/index'
+import { Route as ApiDocumentsDocumentIdContentRouteImport } from './routes/api/documents/$documentId/content'
 import { Route as DashboardDashboardChatChatIdRouteImport } from './routes/_dashboard/dashboard/chat/$chatId'
 
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -229,6 +230,12 @@ const DashboardDashboardChatIndexRoute =
     path: '/dashboard/chat/',
     getParentRoute: () => DashboardRoute,
   } as any)
+const ApiDocumentsDocumentIdContentRoute =
+  ApiDocumentsDocumentIdContentRouteImport.update({
+    id: '/api/documents/$documentId/content',
+    path: '/api/documents/$documentId/content',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardDashboardChatChatIdRoute =
   DashboardDashboardChatChatIdRouteImport.update({
     id: '/dashboard/chat/$chatId',
@@ -270,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardDashboardIndexRoute
   '/api/chat/': typeof ApiChatIndexRoute
   '/dashboard/chat/$chatId': typeof DashboardDashboardChatChatIdRoute
+  '/api/documents/$documentId/content': typeof ApiDocumentsDocumentIdContentRoute
   '/dashboard/chat/': typeof DashboardDashboardChatIndexRoute
 }
 export interface FileRoutesByTo {
@@ -305,6 +313,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardDashboardIndexRoute
   '/api/chat': typeof ApiChatIndexRoute
   '/dashboard/chat/$chatId': typeof DashboardDashboardChatChatIdRoute
+  '/api/documents/$documentId/content': typeof ApiDocumentsDocumentIdContentRoute
   '/dashboard/chat': typeof DashboardDashboardChatIndexRoute
 }
 export interface FileRoutesById {
@@ -344,6 +353,7 @@ export interface FileRoutesById {
   '/_dashboard/dashboard/': typeof DashboardDashboardIndexRoute
   '/api/chat/': typeof ApiChatIndexRoute
   '/_dashboard/dashboard/chat/$chatId': typeof DashboardDashboardChatChatIdRoute
+  '/api/documents/$documentId/content': typeof ApiDocumentsDocumentIdContentRoute
   '/_dashboard/dashboard/chat/': typeof DashboardDashboardChatIndexRoute
 }
 export interface FileRouteTypes {
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/api/chat/'
     | '/dashboard/chat/$chatId'
+    | '/api/documents/$documentId/content'
     | '/dashboard/chat/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/chat'
     | '/dashboard/chat/$chatId'
+    | '/api/documents/$documentId/content'
     | '/dashboard/chat'
   id:
     | '__root__'
@@ -455,6 +467,7 @@ export interface FileRouteTypes {
     | '/_dashboard/dashboard/'
     | '/api/chat/'
     | '/_dashboard/dashboard/chat/$chatId'
+    | '/api/documents/$documentId/content'
     | '/_dashboard/dashboard/chat/'
   fileRoutesById: FileRoutesById
 }
@@ -471,6 +484,7 @@ export interface RootRouteChildren {
   ApiCronNotifyAppointmentsRoute: typeof ApiCronNotifyAppointmentsRoute
   ApiCronNotifyRemindersRoute: typeof ApiCronNotifyRemindersRoute
   ApiChatIndexRoute: typeof ApiChatIndexRoute
+  ApiDocumentsDocumentIdContentRoute: typeof ApiDocumentsDocumentIdContentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -720,6 +734,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDashboardChatIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/api/documents/$documentId/content': {
+      id: '/api/documents/$documentId/content'
+      path: '/api/documents/$documentId/content'
+      fullPath: '/api/documents/$documentId/content'
+      preLoaderRoute: typeof ApiDocumentsDocumentIdContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_dashboard/dashboard/chat/$chatId': {
       id: '/_dashboard/dashboard/chat/$chatId'
       path: '/dashboard/chat/$chatId'
@@ -818,6 +839,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronNotifyAppointmentsRoute: ApiCronNotifyAppointmentsRoute,
   ApiCronNotifyRemindersRoute: ApiCronNotifyRemindersRoute,
   ApiChatIndexRoute: ApiChatIndexRoute,
+  ApiDocumentsDocumentIdContentRoute: ApiDocumentsDocumentIdContentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

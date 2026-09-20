@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useChat, fetchServerSentEvents } from '@tanstack/ai-react'
-import type { ContentPart, StreamChunk } from '@tanstack/ai'
-import type { MultimodalContent } from '@tanstack/ai-client'
-import { clientTools } from '@tanstack/ai-client'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+import type { FileUIPart } from 'ai'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
 import { useChatStore } from './chat-store'
-import { getUserLocationTool } from './client-tools'
 import {
   saveMessages,
   renameConversation,
@@ -16,6 +14,8 @@ import {
 import { retitleConversation } from '@/server/chat-retitle'
 import { getPresignedViewUrl } from '@/server/documents'
 import type { UploadedAttachment } from './input/attachment-types'
+
+const chatTransport = new DefaultChatTransport({ api: '/api/chat' })
 
 // Pure helper — defined outside to avoid stale-closure issues in deps
 function extractText(
@@ -122,33 +122,19 @@ export default function ChatContainer({
   // Capture token usage + model from the stream's RUN_FINISHED event
   const lastUsageRef = useRef<TokenUsageInfo>({})
 
-  // Client-side tools for browser-based functionality
-  const chatTools = clientTools(getUserLocationTool)
-
   const {
     messages,
     sendMessage,
-    isLoading,
+    status,
     setMessages,
     stop,
     error,
-    reload,
+    regenerate,
     addToolApprovalResponse,
   } = useChat({
-    connection: fetchServerSentEvents('/api/chat'),
-    tools: chatTools,
-    onChunk(chunk: StreamChunk) {
-      // Capture model from any event that carries it
-      if ('model' in chunk && chunk.model) {
-        lastUsageRef.current.model = chunk.model
-      }
-      // RUN_FINISHED carries final token usage
-      if (chunk.type === 'RUN_FINISHED' && chunk.usage) {
-        lastUsageRef.current.promptTokens = chunk.usage.promptTokens
-        lastUsageRef.current.completionTokens = chunk.usage.completionTokens
-      }
-    },
+    transport: chatTransport,
   })
+  const isLoading = status === 'submitted' || status === 'streaming'
 
   const clearMessages = useCallback(() => {
     setMessages([])
@@ -318,10 +304,10 @@ export default function ChatContainer({
 
     // Extract reasoning from the assistant message parts
     const parts = lastMsg.parts
-    const reasoningParts = parts.filter((p) => p.type === 'thinking')
+    const reasoningParts = parts.filter((p) => p.type === 'reasoning')
     const reasoningText =
       reasoningParts.length > 0
-        ? reasoningParts.map((p) => p.content || '').join('\n')
+        ? reasoningParts.map((p) => p.text).join('\n')
         : null
 
     // Grab captured token usage from the stream
@@ -452,12 +438,14 @@ export default function ChatContainer({
         })
       }
 
-      const contentForModel: string | MultimodalContent =
-        multimodalParts.length <= 1 && trimmedText
-          ? trimmedText
-          : { content: multimodalParts as unknown as ContentPart[] }
+      const files: FileUIPart[] = attachments.map((attachment) => ({
+        type: 'file',
+        mediaType: attachment.type,
+        filename: attachment.name,
+        url: attachment.inlineUrl,
+      }))
 
-      await sendMessage(contentForModel)
+      await sendMessage(trimmedText ? { text: trimmedText, files } : { files })
     },
     [conversationId, setActiveConversation, sendMessage, onConversationCreated],
   )
@@ -491,8 +479,10 @@ export default function ChatContainer({
         }
         isLoading={isLoading || isConversationLoading}
         error={error}
-        onRetry={reload}
-        onToolApproval={addToolApprovalResponse}
+        onRetry={regenerate}
+        onToolApproval={async (response) => {
+          await addToolApprovalResponse(response)
+        }}
         onOpenAttachment={handleOpenAttachment}
       />
 

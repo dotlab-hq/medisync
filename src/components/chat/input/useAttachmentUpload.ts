@@ -3,7 +3,6 @@ import {
   createDocument,
   createFolder,
   generatePresignedUploadUrl,
-  getPresignedViewUrl,
   listFolders,
 } from '@/server/documents'
 import type {
@@ -139,9 +138,7 @@ export function useAttachmentUpload() {
             },
           })
 
-          const { url: inlineUrl } = await getPresignedViewUrl({
-            data: { id: document.id },
-          })
+          const inlineUrl = `${window.location.origin}/api/documents/${document.id}/content`
 
           const attachment: UploadedAttachment = {
             documentId: document.id,
@@ -191,6 +188,44 @@ export function useAttachmentUpload() {
     [uploadItems],
   )
 
+  const addExistingDocuments = useCallback(
+    (
+      documents: Array<{
+        id: string
+        fileName: string
+        fileType: string
+        fileSize: number
+      }>,
+    ) => {
+      const selected = documents.map<AttachmentQueueItem>((document) => {
+        const inlineUrl = `${window.location.origin}/api/documents/${document.id}/content`
+        const uploaded: UploadedAttachment = {
+          documentId: document.id,
+          name: document.fileName,
+          type: document.fileType,
+          size: document.fileSize,
+          url: `document:${document.id}`,
+          inlineUrl,
+        }
+        return {
+          id: `document-${document.id}`,
+          file: new File([], document.fileName, { type: document.fileType }),
+          progress: 100,
+          status: 'uploaded',
+          uploaded,
+        }
+      })
+      setItems((current) => {
+        const selectedIds = new Set(selected.map((item) => item.id))
+        return [
+          ...current.filter((item) => !selectedIds.has(item.id)),
+          ...selected,
+        ]
+      })
+    },
+    [],
+  )
+
   const getUploadedAttachments = useCallback((): UploadedAttachment[] => {
     return items
       .filter((item) => item.status === 'uploaded' && Boolean(item.uploaded))
@@ -203,6 +238,7 @@ export function useAttachmentUpload() {
     isUploading,
     addFiles,
     addFilesAndUpload,
+    addExistingDocuments,
     removeFile,
     clearFiles,
     uploadQueuedFiles,

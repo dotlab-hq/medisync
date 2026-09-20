@@ -40,6 +40,21 @@ function getS3Client() {
   })
 }
 
+export async function getOwnedDocumentObject(userId: string, id: string) {
+  const file = await db.query.documentFile.findFirst({
+    where: and(eq(documentFile.id, id), eq(documentFile.userId, userId)),
+  })
+  if (!file) return null
+
+  const bucket = process.env.AWS_S3_BUCKET
+  if (!bucket) throw new Error('S3 bucket not configured')
+
+  const object = await getS3Client().send(
+    new GetObjectCommand({ Bucket: bucket, Key: file.s3Key }),
+  )
+  return { file, object }
+}
+
 // ── Helper: get or create storage record ────────────────────────────
 async function ensureStorage(userId: string) {
   const existing = await db.query.userStorage.findFirst({
