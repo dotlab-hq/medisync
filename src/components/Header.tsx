@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Activity, useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Menu, X, LayoutDashboard } from 'lucide-react'
 import ParaglideLocaleSwitcher from './LocaleSwitcher.tsx'
@@ -39,27 +39,25 @@ export default function Header() {
           : 'bg-background/60 backdrop-blur-lg',
       ].join(' ')}
     >
-      <nav className="mx-auto flex max-w-7xl items-center gap-x-3 px-4 py-3 sm:px-6 sm:py-4">
+      <nav className="relative mx-auto flex max-w-7xl items-center gap-x-3 px-4 py-3 sm:px-6">
         {/* Logo */}
         <Link
           to="/"
-          className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary no-underline transition-colors hover:bg-primary/20 sm:px-4 sm:py-2"
+          className="inline-flex items-center text-xl font-bold tracking-tight text-foreground no-underline transition-opacity hover:opacity-70"
           onClick={closeMenu}
         >
-          <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-[var(--mint-leaf)] to-[var(--celadon)]" />
-          MediSync
+          Medi-Sync
         </Link>
 
         {/* Desktop nav links */}
-        <div className="ml-6 hidden items-center gap-x-1 text-sm font-medium md:flex">
+        <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-x-1 text-sm font-medium lg:flex">
           {navLinks.map(({ to, label }) => (
             <Link
               key={to}
               to={to}
-              className="rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="rounded-sm px-3 py-2 text-muted-foreground transition-colors hover:text-foreground"
               activeProps={{
-                className:
-                  'rounded-lg px-3 py-2 bg-primary/10 text-primary font-semibold',
+                className: 'rounded-sm px-3 py-2 text-foreground font-semibold',
               }}
             >
               {label()}
@@ -101,6 +99,8 @@ export default function Header() {
           <button
             className="flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground md:hidden"
             aria-label="Toggle menu"
+            aria-controls="mobile-navigation"
+            aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen((v) => !v)}
           >
             {isMenuOpen ? (
@@ -113,8 +113,11 @@ export default function Header() {
       </nav>
 
       {/* ── Mobile drawer ─────────────────────────────────────────── */}
-      {isMenuOpen && (
-        <div className="border-t border-border/50 bg-background/95 backdrop-blur-xl md:hidden">
+      <Activity mode={isMenuOpen ? 'visible' : 'hidden'}>
+        <div
+          id="mobile-navigation"
+          className="animate-soft-reveal border-t border-border/50 bg-background/95 backdrop-blur-xl md:hidden"
+        >
           <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4">
             {navLinks.map(({ to, label }) => (
               <Link
@@ -154,7 +157,7 @@ export default function Header() {
             </div>
           </div>
         </div>
-      )}
+      </Activity>
     </header>
   )
 }

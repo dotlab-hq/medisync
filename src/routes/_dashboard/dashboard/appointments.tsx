@@ -52,8 +52,9 @@ type StatusFilter = 'all' | 'upcoming' | 'completed' | 'cancelled'
 const STATUS_CONFIG = {
   upcoming: {
     label: 'Upcoming',
-    classes: 'border-l-blue-400 bg-blue-50/50 dark:bg-blue-950/20',
-    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    classes: 'border-l-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20',
+    badge:
+      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
   },
   completed: {
     label: 'Completed',

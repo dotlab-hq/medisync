@@ -10,6 +10,14 @@ import { nitro } from 'nitro/vite'
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
 
 const config = defineConfig({
+  server: {
+    // Keep Vite private to this VM. Caddy is the only public entry point and
+    // proxies this loopback listener through HTTPS.
+    host: '127.0.0.1',
+    port: 3000,
+    strictPort: true,
+    allowedHosts: ['port.3000.vm.wpsadi.dev'],
+  },
   plugins: [
     devtools(),
     nitro({

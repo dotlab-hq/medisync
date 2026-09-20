@@ -38,9 +38,10 @@ export const Route = createFileRoute('/_dashboard/dashboard/reminders')({
 const TYPE_CONFIG = {
   medication: {
     icon: Pill,
-    color: 'text-blue-500',
-    bg: 'bg-blue-50 dark:bg-blue-950/30',
-    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    badge:
+      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
   },
   appointment: {
     icon: Calendar,

@@ -88,7 +88,7 @@ function DashboardLayout() {
         <DashboardSidebar />
       </Suspense>
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/50 px-4 lg:px-6">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur-xl lg:px-6">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
@@ -119,8 +119,8 @@ function DashboardLayout() {
         <div
           className={
             isChatRoute
-              ? 'w-full h-[calc(100svh-3.5rem)] overflow-hidden'
-              : 'w-full h-full overflow-y-auto py-6 px-4 lg:px-8'
+              ? 'h-[calc(100svh-3.5rem)] w-full overflow-hidden'
+              : 'h-full w-full overflow-y-auto px-4 py-6 lg:px-8'
           }
           id="dashboard-main"
         >

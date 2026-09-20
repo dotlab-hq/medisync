@@ -132,12 +132,12 @@ const TOOL_DISPLAY: Record<
   create_reminder: {
     label: 'Create Reminder',
     icon: Pill,
-    color: 'text-blue-500',
+    color: 'text-emerald-600',
   },
   update_reminder: {
     label: 'Update Reminder',
     icon: Pill,
-    color: 'text-blue-500',
+    color: 'text-emerald-600',
   },
   delete_reminder: {
     label: 'Delete Reminder',
