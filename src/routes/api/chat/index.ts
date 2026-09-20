@@ -4,7 +4,7 @@ import type { UIMessage } from 'ai'
 import { auth } from '@/lib/auth'
 import { getChatModel } from '@/lib/ai-model'
 import { classifyPromptInjectionAttempt } from '@/server/chat-safeguard'
-import { getOwnedDocumentObject } from '@/server/documents'
+import { getOwnedDocumentObject } from '@/server/document-object.server'
 
 const SYSTEM_PROMPT = `You are MediSync AI, a concise and empathetic health assistant.
 Never provide a medical diagnosis. Encourage consulting a qualified clinician for clinical concerns.

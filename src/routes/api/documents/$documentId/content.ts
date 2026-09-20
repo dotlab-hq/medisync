@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { auth } from '@/lib/auth'
-import { getOwnedDocumentObject } from '@/server/documents'
+import { getOwnedDocumentObject } from '@/server/document-object.server'
 
 function safeFilename(value: string): string {
   return value.replace(/["\\\r\n]/g, '_')
