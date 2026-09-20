@@ -1,6 +1,7 @@
 {
   "name": "medisync",
   "private": true,
+  "packageManager": "pnpm@10.17.1",
   "type": "module",
   "imports": {
     "@/*": "./src/*"
